@@ -1,0 +1,5 @@
+Connect to mongo 
+mongosh "mongodb+srv://big-data-space.wlxmqwy.mongodb.net" --apiVersion 1 --username big-data-space
+
+Username: big-data-space
+Password: Aa123456
