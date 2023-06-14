@@ -23,11 +23,13 @@ app.get('/', (req, res) => {
 
 
 app.post('/simdata', (req, res) => {
-    const { name, age, city } = req.body;
-    console.log('Received Message:');
-    console.log('Name: ', name);
-    console.log('Age:', age);
-    console.log('City:', city);
+    const { Date, notfac, loc, type, urg } = req.body;
+    console.log('Received Message: ~~~~~~~~~~~~~~~~');
+    console.log('Date: ', Date);
+    console.log('Notifing factor: ', notfac);
+    console.log('Location: ', loc);
+    console.log('Type of event: ', type);
+    console.log('Urgency Level: ', urg);
     res.sendStatus(200);
   });
 
