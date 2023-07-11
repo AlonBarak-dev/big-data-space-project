@@ -39,10 +39,12 @@ Coded by www.creative-tim.com
 import Dashboard from "layouts/dashboard";
 import SunForcast from "./pages/Sun";
 import Home from "./pages/Home";
+import Neos from "pages/Neos";
 
 // @mui icons
 import Icon from "@mui/material/Icon";
 import WbSunnyIcon from "@mui/icons-material/WbSunny";
+import ScatterPlotIcon from "@mui/icons-material/ScatterPlot";
 
 const routes = [
   {
@@ -68,6 +70,14 @@ const routes = [
     icon: <WbSunnyIcon fontSize="small"></WbSunnyIcon>,
     route: "/sun_forcast",
     component: <SunForcast />,
+  },
+  {
+    type: "collapse",
+    name: "Neos",
+    key: "neos",
+    icon: <ScatterPlotIcon fontSize="small"></ScatterPlotIcon>,
+    route: "/neos",
+    component: <Neos />,
   },
 ];
 

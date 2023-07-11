@@ -2,21 +2,23 @@ const express = require("express");
 const path = require("path");
 const axios = require("axios");
 const cheerio = require("cheerio");
+const bodyParser = require("body-parser");
 
 const KEY = "DdYnXnHGhGOgBhdoKoIvo5IyprK7EKfqiZtmKrjo";
 
 const app = express();
 const port = 3000;
 const neo_url = "https://api.nasa.gov/neo/rest/v1/feed";
-// ?start_date=2015-09-07&end_date=2015-09-08&api_key=${KEY}`;
 const skylive_url = "https://theskylive.com/";
 const sun_url = skylive_url + "sun-info";
+const eventList = [];
 
+app.use(bodyParser.json());
 app.use(express.static(__dirname + "/public"));
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
 
-app.get("/neos", (req, res) => {
+app.get("/get_neos", (req, res) => {
   const end_date = new Date();
   const end_date_formatted = formatDate(end_date);
 
@@ -67,6 +69,30 @@ app.get("/sun", (req, res) => {
       console.error(error);
       res.status(500).send("Internal Server Error");
     });
+});
+
+app.get("/get_event_list", (req, res) => {
+  res.json({ events: eventList });
+});
+
+app.post("/simdata", (req, res) => {
+  const { Date, notfac, loc, type, urg } = req.body;
+  const newEvent = {
+    date: Date,
+    notfac: notfac,
+    location: loc,
+    type: type,
+    urgancy: urg,
+  };
+  eventList.push(newEvent);
+
+  console.log("Received Message: ~~~~~~~~~~~~~~~~");
+  console.log("Date: ", Date);
+  console.log("Notifing factor: ", notfac);
+  console.log("Location: ", loc);
+  console.log("Type of event: ", type);
+  console.log("Urgency Level: ", urg);
+  res.sendStatus(200);
 });
 
 app.listen(port, () => {

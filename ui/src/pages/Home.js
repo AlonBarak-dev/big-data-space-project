@@ -8,8 +8,8 @@ import { Grid } from "@mui/material";
 import MDBox from "../components/MDBox";
 import DataTable from "../examples/Tables/DataTable";
 import DashboardLayout from "../examples/LayoutContainers/DashboardLayout";
-import ReportsLineChart from "../examples/Charts/LineCharts/ReportsLineChart";
 import DashboardNavbar from "../examples/Navbars/DashboardNavbar";
+import ComplexStatisticsCard from "examples/Cards/StatisticsCards/ComplexStatisticsCard";
 
 const Home = () => {
   const [jsonData, setJsonData] = useState(null);
@@ -18,7 +18,7 @@ const Home = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("/neos");
+        const response = await fetch("/get_event_list");
         const data = await response.json();
         setJsonData(data);
         setLoading(false);
@@ -39,48 +39,56 @@ const Home = () => {
     );
   }
 
-  console.log(jsonData);
+  const eventList = jsonData["events"];
+  const lastEvent = eventList[eventList.length - 1];
+  var bgColor = lastEvent["urgancy"] >= 4 ? "red" : "info";
+  console.log(eventList);
+
+  if (eventList.length == 0) {
+    return (
+      <DashboardLayout>
+        <DashboardNavbar />
+        <h3>No Events!</h3>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
       <DashboardNavbar />
-      <MDBox py={3}>
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={12} lg={12}>
-            <MDBox>
-              <ReportsLineChart
-                color="info"
-                title="Weekly NEO Count"
-                description="Number of NEO's for each day this week"
-                chart={jsonData["count"]}
-              />
-            </MDBox>
-          </Grid>
-          <Grid item xs={12} md={6} lg={4}>
-            <MDBox py={5}>
-              <ReportsLineChart
-                color="info"
-                title="Weekly NEO Count"
-                description="Number of NEO's for each day this week"
-                chart={jsonData["count"]}
-              />
-            </MDBox>
-          </Grid>
-          <Grid item xs={12} md={6} lg={8}>
-            <h3>Near Earth Objects</h3>
-            <DataTable
-              table={{
-                columns: [
-                  { Header: "name", accessor: "name", width: "30%" },
-                  { Header: "approach date", accessor: "approach_date", width: "30%" },
-                  { Header: "is hazardous", accessor: "is_potentially_hazardous" },
-                ],
-                rows: jsonData["neo_list"],
-              }}
-            />
-          </Grid>
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={12} lg={6}>
+          <h3>Latest Event</h3>
+          <MDBox mb={1.5} py={3} px={1.5} color={"white"} bgColor={bgColor} borderRadius={10}>
+            <p>Date: {lastEvent["date"]}</p>
+            <p>Location: {lastEvent["location"]}</p>
+            <p>Notifying Factor: {lastEvent["notfac"]}</p>
+            <p>Type: {lastEvent["type"]}</p>
+            <p>Urgancy: {lastEvent["urgancy"]}</p>
+          </MDBox>
         </Grid>
-      </MDBox>
+        <Grid item xs={12} md={12} lg={6}>
+          <h3>Sun Forcast</h3>
+          <MDBox mb={1.5} py={3} px={1.5} color={"white"} bgColor={"green"} borderRadius={10}>
+            <h3>here i should add the sun forcast</h3>
+          </MDBox>
+        </Grid>
+        <Grid item xs={12} md={12} lg={12}>
+          <h3>Events</h3>
+          <DataTable
+            table={{
+              columns: [
+                { Header: "date", accessor: "date", width: "20%" },
+                { Header: "location", accessor: "location", width: "20%" },
+                { Header: "notifying factor", accessor: "notfac", width: "20%" },
+                { Header: "type", accessor: "type", width: "20%" },
+                { Header: "urgancy", accessor: "urgancy", width: "20%" },
+              ],
+              rows: eventList.reverse(),
+            }}
+          />
+        </Grid>
+      </Grid>
     </DashboardLayout>
   );
 };

@@ -6,18 +6,19 @@ import "react-loading-skeleton/dist/skeleton.css";
 import { Grid } from "@mui/material";
 
 import MDBox from "../components/MDBox";
+import DataTable from "../examples/Tables/DataTable";
 import DashboardLayout from "../examples/LayoutContainers/DashboardLayout";
+import ReportsLineChart from "../examples/Charts/LineCharts/ReportsLineChart";
 import DashboardNavbar from "../examples/Navbars/DashboardNavbar";
-import { object } from "prop-types";
 
-const SunForcast = () => {
+const Neos = () => {
   const [jsonData, setJsonData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("/sun");
+        const response = await fetch("/get_neos");
         const data = await response.json();
         setJsonData(data);
         setLoading(false);
@@ -38,22 +39,35 @@ const SunForcast = () => {
     );
   }
 
+  console.log(jsonData);
+
   return (
     <DashboardLayout>
       <DashboardNavbar />
       <MDBox py={3}>
         <Grid container spacing={3}>
-          <Grid item xs={12} md={12} lg={12}>
-            <MDBox>
-              <h3>Sun Description</h3>
-              <p>{jsonData["sunDescription"]}</p>
+          <Grid item xs={12} md={6} lg={4}>
+            <MDBox py={5}>
+              <ReportsLineChart
+                color="info"
+                title="Weekly NEO Count"
+                description="Number of NEO's for each day this week"
+                chart={jsonData["count"]}
+              />
             </MDBox>
           </Grid>
-          <Grid item xs={12} md={12} lg={6}>
-            <Image image_path={jsonData["activityImagePath"]} title="Sun Activity" />
-          </Grid>
-          <Grid item xs={12} md={12} lg={12}>
-            <Image image_path={jsonData["positionImagePath"]} title="Sun Position" />
+          <Grid item xs={12} md={6} lg={8}>
+            <h3>Near Earth Objects</h3>
+            <DataTable
+              table={{
+                columns: [
+                  { Header: "name", accessor: "name", width: "30%" },
+                  { Header: "approach date", accessor: "approach_date", width: "30%" },
+                  { Header: "is hazardous", accessor: "is_potentially_hazardous" },
+                ],
+                rows: jsonData["neo_list"],
+              }}
+            />
           </Grid>
         </Grid>
       </MDBox>
@@ -61,20 +75,4 @@ const SunForcast = () => {
   );
 };
 
-export default SunForcast;
-
-const Image = (args) => {
-  const { image_path, title } = args;
-  const imgStyle = {
-    objectFit: "cover",
-    maxWidth: 700,
-    maxHeight: 700,
-  };
-
-  return (
-    <MDBox>
-      <h3>{title}</h3>
-      <img src={image_path} style={imgStyle} />
-    </MDBox>
-  );
-};
+export default Neos;
