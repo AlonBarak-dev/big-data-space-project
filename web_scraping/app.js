@@ -20,6 +20,7 @@ app.set("view engine", "ejs");
 
 app.get("/get_neos", (req, res) => {
   const end_date = new Date();
+  end_date.setDate(end_date.getDate() + 1);
   const end_date_formatted = formatDate(end_date);
 
   const start_date = new Date();
@@ -55,6 +56,22 @@ app.get("/sun", (req, res) => {
         ".main_content > div:nth-child(19) > div:nth-child(8) > div:nth-child(1) > a:nth-child(1) > img:nth-child(1)"
       ).attr("src");
 
+      const rightAscension = $(
+        "div.keyinfobox:nth-child(8) > ar:nth-child(2)"
+      ).text();
+
+      const declination = $(
+        "div.keyinfobox:nth-child(9) > ar:nth-child(2)"
+      ).text();
+
+      const constellation = $(
+        "div.keyinfobox:nth-child(10) > ar:nth-child(2) > a:nth-child(1)"
+      ).text();
+
+      const magnitude = $(
+        "div.keyinfobox:nth-child(11) > ar:nth-child(2)"
+      ).text();
+
       const activityImageURL = skylive_url + sunActivityImageURL;
       const positionImageURL = skylive_url + sunPositionURL;
 
@@ -62,6 +79,10 @@ app.get("/sun", (req, res) => {
         sunDescription: sunDescription,
         activityImagePath: activityImageURL,
         positionImagePath: positionImageURL,
+        rightAscension: rightAscension,
+        declination: declination,
+        constellation: constellation,
+        magnitude: magnitude,
       });
     })
     .catch((error) => {
@@ -109,20 +130,27 @@ const processNEOResponse = function (res) {
     },
   };
 
-  // this is for the neos in the last 24 hours (doesnt work quit like it should yet)
-  const today_date = new Date();
-  const today_date_formatted = formatDate(today_date);
+  // get all neos, original message gives them based on date
+  const ordered_neos = [];
+  for (var date in neos) {
+    for (var idx in neos[date]) {
+      ordered_neos.push(neos[date][idx]);
+    }
+  }
 
-  for (var neo_idx in neos[today_date_formatted]) {
-    let neo = neos[today_date_formatted][neo_idx];
+  // get neos in the next 24 hours
+  for (var neo_idx in ordered_neos) {
+    let neo = ordered_neos[neo_idx];
     let close_approach_data = neo["close_approach_data"]["0"];
-    result["neo_list"].push({
-      name: neo["name"],
-      is_potentially_hazardous: neo["is_potentially_hazardous_asteroid"]
-        ? "Yes"
-        : "No",
-      approach_date: close_approach_data["close_approach_date_full"],
-    });
+    if (isInNext24Hours(close_approach_data["close_approach_date_full"])) {
+      result["neo_list"].push({
+        name: neo["name"],
+        is_potentially_hazardous: neo["is_potentially_hazardous_asteroid"]
+          ? "Yes"
+          : "No",
+        approach_date: close_approach_data["close_approach_date_full"],
+      });
+    }
   }
 
   // count neos for each day
@@ -154,4 +182,17 @@ function formatDate(date) {
   const day = String(date.getDate()).padStart(2, "0");
 
   return `${year}-${month}-${day}`;
+}
+
+function isInNext24Hours(dateTimeString) {
+  const targetDate = new Date(dateTimeString);
+  const currentDate = new Date();
+  const timeDifference = currentDate.getTime() - targetDate.getTime();
+  const twentyFourHours = 24 * 60 * 60 * 1000;
+
+  if (timeDifference <= twentyFourHours) {
+    return true;
+  } else {
+    return false;
+  }
 }

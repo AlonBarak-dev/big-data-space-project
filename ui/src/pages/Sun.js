@@ -52,6 +52,17 @@ const SunForcast = () => {
           <Grid item xs={12} md={12} lg={6}>
             <Image image_path={jsonData["activityImagePath"]} title="Sun Activity" />
           </Grid>
+          <Grid item xs={12} md={12} lg={6}>
+            <MDBox>
+              <h3>Details</h3>
+              <p>
+                Right Ascension: {jsonData["rightAscension"]} <br />
+                Declination: {jsonData["declination"]} <br />
+                Constellation: {jsonData["constellation"]} <br />
+                Magnitude: {jsonData["magnitude"]} <br />
+              </p>
+            </MDBox>
+          </Grid>
           <Grid item xs={12} md={12} lg={12}>
             <Image image_path={jsonData["positionImagePath"]} title="Sun Position" />
           </Grid>

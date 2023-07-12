@@ -13,6 +13,7 @@ import ComplexStatisticsCard from "examples/Cards/StatisticsCards/ComplexStatist
 
 const Home = () => {
   const [jsonData, setJsonData] = useState(null);
+  const [sunData, setSunData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,6 +22,11 @@ const Home = () => {
         const response = await fetch("/get_event_list");
         const data = await response.json();
         setJsonData(data);
+
+        const sun_response = await fetch("/sun");
+        const sun_data = await sun_response.json();
+        setSunData(sun_data);
+
         setLoading(false);
       } catch (error) {
         console.error("Error retrieving JSON data:", error);
@@ -41,7 +47,6 @@ const Home = () => {
 
   const eventList = jsonData["events"];
   const lastEvent = eventList[eventList.length - 1];
-  var bgColor = lastEvent["urgancy"] >= 4 ? "red" : "info";
   console.log(eventList);
 
   if (eventList.length == 0) {
@@ -53,6 +58,8 @@ const Home = () => {
     );
   }
 
+  var bgColor = lastEvent["urgancy"] >= 4 ? "red" : "info";
+
   return (
     <DashboardLayout>
       <DashboardNavbar />
@@ -60,17 +67,29 @@ const Home = () => {
         <Grid item xs={12} md={12} lg={6}>
           <h3>Latest Event</h3>
           <MDBox mb={1.5} py={3} px={1.5} color={"white"} bgColor={bgColor} borderRadius={10}>
-            <p>Date: {lastEvent["date"]}</p>
-            <p>Location: {lastEvent["location"]}</p>
-            <p>Notifying Factor: {lastEvent["notfac"]}</p>
-            <p>Type: {lastEvent["type"]}</p>
-            <p>Urgancy: {lastEvent["urgancy"]}</p>
+            <p>
+              Date: {lastEvent["date"]}
+              <br />
+              Location: {lastEvent["location"]}
+              <br />
+              Notifying Factor: {lastEvent["notfac"]}
+              <br />
+              Type: {lastEvent["type"]}
+              Urgancy: {lastEvent["urgancy"]}
+              <br />
+            </p>
           </MDBox>
         </Grid>
         <Grid item xs={12} md={12} lg={6}>
           <h3>Sun Forcast</h3>
           <MDBox mb={1.5} py={3} px={1.5} color={"white"} bgColor={"green"} borderRadius={10}>
-            <h3>here i should add the sun forcast</h3>
+            <h3>Details</h3>
+            <p>
+              Right Ascension: {sunData["rightAscension"]} <br />
+              Declination: {sunData["declination"]} <br />
+              Constellation: {sunData["constellation"]} <br />
+              Magnitude: {sunData["magnitude"]} <br />
+            </p>
           </MDBox>
         </Grid>
         <Grid item xs={12} md={12} lg={12}>
