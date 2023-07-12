@@ -8,7 +8,7 @@ import { Grid } from "@mui/material";
 import MDBox from "../components/MDBox";
 import DashboardLayout from "../examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "../examples/Navbars/DashboardNavbar";
-import { object } from "prop-types";
+import Card from "@mui/material/Card";
 
 const SunForcast = () => {
   const [jsonData, setJsonData] = useState(null);
@@ -44,27 +44,35 @@ const SunForcast = () => {
       <MDBox py={3}>
         <Grid container spacing={3}>
           <Grid item xs={12} md={12} lg={12}>
-            <MDBox>
-              <h3>Sun Description</h3>
-              <p>{jsonData["sunDescription"]}</p>
-            </MDBox>
+            <Card>
+              <MDBox mx={2} my={2}>
+                <h3>Sun Description</h3>
+                <p>{jsonData["sunDescription"]}</p>
+              </MDBox>
+            </Card>
           </Grid>
           <Grid item xs={12} md={12} lg={6}>
-            <Image image_path={jsonData["activityImagePath"]} title="Sun Activity" />
+            <Card>
+              <Image image_path={jsonData["activityImagePath"]} title="Sun Activity" />
+            </Card>
           </Grid>
           <Grid item xs={12} md={12} lg={6}>
-            <MDBox>
-              <h3>Details</h3>
-              <p>
-                Right Ascension: {jsonData["rightAscension"]} <br />
-                Declination: {jsonData["declination"]} <br />
-                Constellation: {jsonData["constellation"]} <br />
-                Magnitude: {jsonData["magnitude"]} <br />
-              </p>
-            </MDBox>
+            <Card>
+              <MDBox mx={2} my={2}>
+                <h3>Details</h3>
+                <p>
+                  Right Ascension: {jsonData["rightAscension"]} <br />
+                  Declination: {jsonData["declination"]} <br />
+                  Constellation: {jsonData["constellation"]} <br />
+                  Magnitude: {jsonData["magnitude"]} <br />
+                </p>
+              </MDBox>
+            </Card>
           </Grid>
-          <Grid item xs={12} md={12} lg={12}>
-            <Image image_path={jsonData["positionImagePath"]} title="Sun Position" />
+          <Grid item xs={12} md={12} lg={6}>
+            <Card>
+              <Image image_path={jsonData["positionImagePath"]} title="Sun Position" />
+            </Card>
           </Grid>
         </Grid>
       </MDBox>
@@ -83,7 +91,7 @@ const Image = (args) => {
   };
 
   return (
-    <MDBox>
+    <MDBox mx={2} my={2}>
       <h3>{title}</h3>
       <img src={image_path} style={imgStyle} />
     </MDBox>
