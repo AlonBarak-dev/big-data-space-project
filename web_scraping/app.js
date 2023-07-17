@@ -3,15 +3,19 @@ const path = require("path");
 const axios = require("axios");
 const cheerio = require("cheerio");
 const bodyParser = require("body-parser");
+const { Client } = require("elasticsearch");
+const e = require("express");
 
 const KEY = "DdYnXnHGhGOgBhdoKoIvo5IyprK7EKfqiZtmKrjo";
 
 const app = express();
+const client = new Client({ node: "http://localhost:9200" });
+
 const port = 3000;
+const index = "events";
 const neo_url = "https://api.nasa.gov/neo/rest/v1/feed";
 const skylive_url = "https://theskylive.com/";
 const sun_url = skylive_url + "sun-info";
-const eventList = [];
 
 app.use(bodyParser.json());
 app.use(express.static(__dirname + "/public"));
@@ -92,8 +96,23 @@ app.get("/sun", (req, res) => {
     });
 });
 
-app.get("/get_event_list", (req, res) => {
-  res.json({ events: eventList });
+app.get("/get_event_list", async (req, res) => {
+  const queryValue = req.query.query;
+  let results;
+
+  if (queryValue) {
+    results = await searchDocuments(index, queryValue);
+    console.log(results);
+    console.log("Searching For: ", queryValue);
+  } else {
+    results = await getAllEntries(index);
+  }
+
+  const events = results.hits.hits.map((hit) => {
+    return hit["_source"];
+  });
+
+  res.json({ events: events });
 });
 
 app.post("/simdata", (req, res) => {
@@ -105,7 +124,8 @@ app.post("/simdata", (req, res) => {
     type: type,
     urgancy: urg,
   };
-  eventList.push(newEvent);
+
+  indexDocument(index, newEvent);
 
   console.log("Received Message: ~~~~~~~~~~~~~~~~");
   console.log("Date: ", Date);
@@ -175,6 +195,43 @@ const processNEOResponse = function (res) {
 
   return result;
 };
+
+async function indexDocument(index, document) {
+  const response = await client.index({
+    index,
+    body: document,
+  });
+  console.log("Document indexed:", response);
+}
+
+async function searchDocuments(index, query) {
+  const response = await client.search({
+    index: index,
+    body: {
+      query: {
+        multi_match: {
+          query: query,
+          fields: ["*"],
+        },
+      },
+      size: 10000,
+    },
+  });
+  return response;
+}
+
+async function getAllEntries(index) {
+  const response = await client.search({
+    index: index,
+    body: {
+      query: {
+        match_all: {},
+      },
+      size: 10000,
+    },
+  });
+  return response;
+}
 
 function formatDate(date) {
   const year = date.getFullYear();

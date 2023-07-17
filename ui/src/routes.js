@@ -40,11 +40,13 @@ import Dashboard from "layouts/dashboard";
 import SunForcast from "./pages/Sun";
 import Home from "./pages/Home";
 import Neos from "pages/Neos";
+import Search from "pages/Search";
 
 // @mui icons
 import Icon from "@mui/material/Icon";
 import WbSunnyIcon from "@mui/icons-material/WbSunny";
 import ScatterPlotIcon from "@mui/icons-material/ScatterPlot";
+import SearchIcon from "@mui/icons-material/Search";
 
 const routes = [
   {
@@ -78,6 +80,14 @@ const routes = [
     icon: <ScatterPlotIcon fontSize="small"></ScatterPlotIcon>,
     route: "/neos",
     component: <Neos />,
+  },
+  {
+    type: "collapse",
+    name: "Search",
+    key: "search",
+    icon: <SearchIcon fontSize="small"></SearchIcon>,
+    route: "/search",
+    component: <Search />,
   },
 ];
 
