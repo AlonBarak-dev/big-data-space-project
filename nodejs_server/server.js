@@ -1,9 +1,13 @@
 const express = require('express')
 const bodyParser = require('body-parser');
+const { Client } = require('@elastic/elasticsearch'); // elastic search
+const Redis = require('ioredis');   // redis
+
 const app = express()
+app.use(bodyParser.json());
+
 const port = 3001
-// elastic search 
-const { Client } = require('@elastic/elasticsearch');
+const indexName = 'simulator_events'; // Elastic search - index name for simulator events
 // Create a client instance
 const client = new Client({
   node: `http://35.234.119.103:9200`,
@@ -12,10 +16,12 @@ const client = new Client({
     password: 'changeme'
   }
 })
-app.use(bodyParser.json());
 
-// Elastic search - index name for simulator events
-const indexName = 'simulator_events';
+// Create a new Redis instance
+const redis = new Redis({
+  host: '35.234.119.103', // Redis server host
+  port: 6379,        // Redis server port
+});
 
 // Using REST-API meanwhile to communicate with the simulator
 app.post('/simdata', (req, res) => {
@@ -27,6 +33,16 @@ app.post('/simdata', (req, res) => {
     console.log('Type of event: ', type)
     console.log('Urgency Level: ', urg)
     insertData(indexName, req.body)
+
+    // save important data in redis cache
+    redis.set(type, Date)
+    .then(() => {
+      console.log('Data added to Redis successfully!');
+    })
+    .catch((error) => {
+      console.error('Error adding data to Redis:', error);
+    });
+
     res.sendStatus(200);
   });
 
@@ -49,6 +65,13 @@ app.get("/get_event_list", async (req, res) => {
 
   res.json({ events: events });
 });
+
+app.get("/get_events_dates", async (req, res) => {
+  let results;
+  results = await getAllKeysRedis();
+  res.send(results);
+
+})
 
 async function searchDocuments(indexName, query) {
   const response = await client.search({
@@ -78,6 +101,25 @@ async function getAllEntries(indexName) {
   });
   return response;
 }
+
+// Function to retrieve all keys and their corresponding values
+async function getAllKeysRedis() {
+  let cursor = '0';
+  const allKeys = [];
+
+  do {
+    const [newCursor, keys] = await redis.scan(cursor);
+    cursor = newCursor;
+
+    for (const key of keys) {
+      const value = await redis.get(key);
+      allKeys.push({ key, value });
+    }
+  } while (cursor !== '0');
+
+  return allKeys;
+}
+
 
 async function insertData(indexName, data) {
   try {
