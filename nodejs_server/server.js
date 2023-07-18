@@ -15,7 +15,7 @@ const client = new Client({
 app.use(bodyParser.json());
 
 // Elastic search - index name for simulator events
-const indexName = 'event_test_idx';
+const indexName = 'simulator_events';
 
 // Using REST-API meanwhile to communicate with the simulator
 app.post('/simdata', (req, res) => {
@@ -30,10 +30,54 @@ app.post('/simdata', (req, res) => {
     res.sendStatus(200);
   });
 
-app.listen(port, () => {
-    console.log(`server listening on port ${port}`)
-})
 
+app.get("/get_event_list", async (req, res) => {
+  const queryValue = req.query.query;
+  let results;
+
+  if (queryValue) {
+    results = await searchDocuments(indexName, queryValue);
+    console.log(results);
+    console.log("Searching For: ", queryValue);
+  } else {
+    results = await getAllEntries(indexName);
+  }
+
+  const events = results.hits.hits.map((hit) => {
+    return hit["_source"];
+  });
+
+  res.json({ events: events });
+});
+
+async function searchDocuments(indexName, query) {
+  const response = await client.search({
+    index: indexName,
+    body: {
+      query: {
+        multi_match: {
+          query: query,
+          fields: ["*"],
+        },
+      },
+      size: 10000,
+    },
+  });
+  return response;
+}
+
+async function getAllEntries(indexName) {
+  const response = await client.search({
+    index: indexName,
+    body: {
+      query: {
+        match_all: {},
+      },
+      size: 10000,
+    },
+  });
+  return response;
+}
 
 async function insertData(indexName, data) {
   try {
@@ -50,12 +94,7 @@ async function insertData(indexName, data) {
   }
 }
 
-// Usage example
 
-// const indexName = 'event_test_idx';
-// const data = {
-//   field1: 'value1',
-//   field2: 'value2'
-// };
-
-// insertData(indexName, data);
+app.listen(port, () => {
+  console.log(`http://localhost:${port}`)
+})
