@@ -66,10 +66,10 @@ app.get("/get_event_list", async (req, res) => {
   res.json({ events: events });
 });
 
-app.get("/get_events_dates", async (req, res) => {
+app.get("/get_event_dates", async (req, res) => {
   let results;
   results = await getAllKeysRedis();
-  res.send(results);
+  res.json(results);
 
 })
 
