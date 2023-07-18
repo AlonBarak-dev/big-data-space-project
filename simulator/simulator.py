@@ -17,15 +17,12 @@ class astro_simulator:
                                    'Keck 1 and 2', 'Hobby-Eberly', 'Gran canarias', 
                                    'THe Giant Magellan', 'Thirty Meter', 'European Extremly Large']
         self.types = ['GRB', 'Apparent Brightness Rise', 'UV Rise', 'X-Ray Rise', 'Comet']
-        
+        self.url = 'http://localhost:3001/simdata'  # change when dumping REST!
+        self.headers = {'Content-Type': 'application/json'}
         
     def publish_data(self, data):
-        url = 'http://localhost:3000/simdata'  # Replace with your server URL
-        headers = {'Content-Type': 'application/json'}
         json_data = json.dumps(data)
-
-        response = requests.post(url, data=json_data, headers=headers)
-
+        response = requests.post(self.url, data=json_data, headers=self.headers)
         if response.status_code == 200:
             print('Data published successfully!')
         else:
