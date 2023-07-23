@@ -2,6 +2,7 @@ const express = require('express')
 const bodyParser = require('body-parser');
 const { Client } = require('@elastic/elasticsearch'); // elastic search
 const Redis = require('ioredis');   // redis
+const kafka = require('kafka-node');
 
 const app = express()
 app.use(bodyParser.json());
@@ -16,6 +17,22 @@ const client = new Client({
     password: 'changeme'
   }
 })
+
+// create a new kafka client
+const kafkaClient = new kafka.KafkaClient({
+  kafkaHost: "35.234.119.103:9092"
+});
+
+const consumer = new kafka.Consumer(
+  kafkaClient,
+  [
+      { topic: 'webevents.dev', partition: 0 }    // TODO change topic name
+  ],
+  {
+      autoCommit: false
+  }
+);
+
 
 // Create a new Redis instance
 const redis = new Redis({
@@ -135,6 +152,41 @@ async function insertData(indexName, data) {
     console.error('Error inserting data:', error);
   }
 }
+
+
+// Kafka Section:
+
+consumer.on('message', function (message) {
+  try{
+    const parsedData = JSON.parse(message.value)
+    insertData(indexName, parsedData)
+  }
+  catch(error){
+    console.log(message)
+  }
+    console.log(message)
+});
+
+consumer.on('ready', () => {
+  console.log('Consumer is ready!');
+});
+
+// Start consuming messages
+consumer.on('connect', () => {
+  console.log('Consumer connected to Kafka');
+});
+
+// Handle consumer disconnection
+consumer.on('close', () => {
+  console.log('Consumer disconnected from Kafka');
+});
+
+// Handle consumer errors
+consumer.on('error', (error) => {
+  console.error('Consumer error:', error);
+});
+
+
 
 
 app.listen(port, () => {
