@@ -60,7 +60,7 @@ class astro_simulator:
         self.notfac = self.list_of_telescopes[random.randrange(0, 11)]
         self.loc = self.generate_ra()
         self.type = self.types[random.randrange(0, 5)]
-        self.urg = random.randrange(0, 5)
+        self.urg = random.randrange(1, 6)
         
         return self.build_message(self.date, self.notfac, self.loc, self.type, self.urg)
     
