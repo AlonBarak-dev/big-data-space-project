@@ -2,6 +2,7 @@ const express = require('express')
 const bodyParser = require('body-parser');
 const { Client } = require('@elastic/elasticsearch'); // elastic search
 const kafka = require('kafka-node');
+const { MongoClient } = require('mongodb');
 
 const app = express()
 app.use(bodyParser.json());
@@ -9,6 +10,8 @@ app.use(bodyParser.json());
 const port = 3001
 const indexName = 'simulator_events'; // Elastic search - index name for simulator events
 const topicName = 'raw_simulator_events'  // Kafka - topic name
+const url = 'mongodb+srv://big-data-space:Aa123456@big-data-space.wlxmqwy.mongodb.net/?retryWrites=true&w=majority' // MongoDB 
+const simCollectionName = "simulator_raw"
 
 // Create a client instance
 const client = new Client({
@@ -27,16 +30,18 @@ const kafkaClient = new kafka.KafkaClient({
 const consumer = new kafka.Consumer(
   kafkaClient,
   [
-      { topic: topicName, partition: 0 }    // TODO change topic name
+      { topic: topicName, partition: 0 } 
   ],
   {
       autoCommit: false
   }
 );
 
+// Create a new MongoDB instnace 
+const mongoClient = new MongoClient(url)
 
 // This function insert data to elastic search DB.
-async function insertData(indexName, data) {
+async function insertDataToElastic(indexName, data) {
   try {
     const response = await client.index({
       index: indexName,
@@ -51,13 +56,24 @@ async function insertData(indexName, data) {
   }
 }
 
+async function insertDataToMongo(collecetionName, data){
+  try{
+    await mongoClient.connect()
+    const db = mongoClient.db()
+    const collection = db.collection(collecetionName)
+    const result = await collection.insertOne(data)
+    console.log("Data inserted successfully!")
+  } catch(err){
+    console.log("Insertion Failed!", err)
+  }
+}
 
 // Kafka Section:
-
 consumer.on('message', function (message) {
   try{
     const parsedData = JSON.parse(message.value)
-    insertData(indexName, parsedData)
+    insertDataToElastic(indexName, parsedData)
+    insertDataToMongo(simCollectionName, parsedData)
   }
   catch(error){
     console.log(message)
@@ -83,8 +99,6 @@ consumer.on('close', () => {
 consumer.on('error', (error) => {
   console.error('Consumer error:', error);
 });
-
-
 
 
 app.listen(port, () => {
