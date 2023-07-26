@@ -4,7 +4,6 @@ const axios = require("axios");
 const cheerio = require("cheerio");
 const bodyParser = require("body-parser");
 const { Client } = require("elasticsearch");
-const e = require("express");
 
 const KEY = "DdYnXnHGhGOgBhdoKoIvo5IyprK7EKfqiZtmKrjo";
 

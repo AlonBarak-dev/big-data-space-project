@@ -1,16 +1,23 @@
-// server.js
-const express = require('express');
-const path = require('path');
+const express = require("express");
+const path = require("path");
 const axios = require("axios");
-
-const port = process.env.PORT || 3000;
-const app = express();
+const cheerio = require("cheerio");
+const bodyParser = require("body-parser");
+const { Client } = require("elasticsearch");
 
 const KEY = "DdYnXnHGhGOgBhdoKoIvo5IyprK7EKfqiZtmKrjo";
-const neo_url = "https://api.nasa.gov/neo/rest/v1/feed";
 
-// Serve static files from the React build directory
-app.use(express.static(path.join(__dirname, 'build')));
+const app = express();
+const client = new Client({ node: "http://localhost:9200" });
+
+const port = 3000;
+const index = "events";
+const neo_url = "https://api.nasa.gov/neo/rest/v1/feed";
+const skylive_url = "https://theskylive.com/";
+const sun_url = skylive_url + "sun-info";
+
+app.use(bodyParser.json());
+app.use(express.static(__dirname + "/build"));
 
 app.get("/get_neos", (req, res) => {
   const end_date = new Date();
@@ -38,14 +45,101 @@ app.get("/get_neos", (req, res) => {
     });
 });
 
-// Handle requests for React pages
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'build', 'index.html'));
+app.get("/sun", (req, res) => {
+  axios
+    .get(sun_url)
+    .then((response) => {
+      const $ = cheerio.load(response.data);
+
+      const sunDescription = $("p.object_headline_text").text();
+      const sunActivityImageURL = $("div.sun_container img").attr("src");
+      const sunPositionURL = $(
+        ".main_content > div:nth-child(19) > div:nth-child(8) > div:nth-child(1) > a:nth-child(1) > img:nth-child(1)"
+      ).attr("src");
+
+      const rightAscension = $(
+        "div.keyinfobox:nth-child(8) > ar:nth-child(2)"
+      ).text();
+
+      const declination = $(
+        "div.keyinfobox:nth-child(9) > ar:nth-child(2)"
+      ).text();
+
+      const constellation = $(
+        "div.keyinfobox:nth-child(10) > ar:nth-child(2) > a:nth-child(1)"
+      ).text();
+
+      const magnitude = $(
+        "div.keyinfobox:nth-child(11) > ar:nth-child(2)"
+      ).text();
+
+      const activityImageURL = skylive_url + sunActivityImageURL;
+      const positionImageURL = skylive_url + sunPositionURL;
+
+      res.json({
+        sunDescription: sunDescription,
+        activityImagePath: activityImageURL,
+        positionImagePath: positionImageURL,
+        rightAscension: rightAscension,
+        declination: declination,
+        constellation: constellation,
+        magnitude: magnitude,
+      });
+    })
+    .catch((error) => {
+      // Handle any errors that occurred during the request
+      console.error(error);
+      res.status(500).send("Internal Server Error");
+    });
 });
 
-// Start the server
+app.get("/get_event_list", async (req, res) => {
+  const queryValue = req.query.query;
+  let results;
+
+  if (queryValue) {
+    results = await searchDocuments(index, queryValue);
+    console.log(results);
+    console.log("Searching For: ", queryValue);
+  } else {
+    results = await getAllEntries(index);
+  }
+
+  const events = results.hits.hits.map((hit) => {
+    return hit["_source"];
+  });
+
+  res.json({ events: events });
+});
+
+app.post("/simdata", (req, res) => {
+  const { Date, notfac, loc, type, urg } = req.body;
+  const newEvent = {
+    date: Date,
+    notfac: notfac,
+    location: loc,
+    type: type,
+    urgancy: urg,
+  };
+
+  indexDocument(index, newEvent);
+
+  console.log("Received Message: ~~~~~~~~~~~~~~~~");
+  console.log("Date: ", Date);
+  console.log("Notifing factor: ", notfac);
+  console.log("Location: ", loc);
+  console.log("Type of event: ", type);
+  console.log("Urgency Level: ", urg);
+  res.sendStatus(200);
+});
+
+// Handle requests for React pages
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "build", "index.html"));
+});
+
 app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+  console.log(`Server is listening on port ${port}`);
 });
 
 const processNEOResponse = function (res) {
@@ -103,6 +197,43 @@ const processNEOResponse = function (res) {
 
   return result;
 };
+
+async function indexDocument(index, document) {
+  const response = await client.index({
+    index,
+    body: document,
+  });
+  console.log("Document indexed:", response);
+}
+
+async function searchDocuments(index, query) {
+  const response = await client.search({
+    index: index,
+    body: {
+      query: {
+        multi_match: {
+          query: query,
+          fields: ["*"],
+        },
+      },
+      size: 10000,
+    },
+  });
+  return response;
+}
+
+async function getAllEntries(index) {
+  const response = await client.search({
+    index: index,
+    body: {
+      query: {
+        match_all: {},
+      },
+      size: 10000,
+    },
+  });
+  return response;
+}
 
 function formatDate(date) {
   const year = date.getFullYear();
