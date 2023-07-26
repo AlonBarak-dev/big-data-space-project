@@ -8,6 +8,8 @@ app.use(bodyParser.json());
 
 const port = 3001
 const indexName = 'simulator_events'; // Elastic search - index name for simulator events
+const topicName = 'raw_simulator_events'  // Kafka - topic name
+
 // Create a client instance
 const client = new Client({
   node: `http://35.234.119.103:9200`,
@@ -25,62 +27,12 @@ const kafkaClient = new kafka.KafkaClient({
 const consumer = new kafka.Consumer(
   kafkaClient,
   [
-      { topic: 'webevents.dev', partition: 0 }    // TODO change topic name
+      { topic: topicName, partition: 0 }    // TODO change topic name
   ],
   {
       autoCommit: false
   }
 );
-
-// This function return the events list.
-app.get("/get_event_list", async (req, res) => {
-  const queryValue = req.query.query;
-  let results;
-
-  if (queryValue) {
-    results = await searchDocuments(indexName, queryValue);
-    console.log(results);
-    console.log("Searching For: ", queryValue);
-  } else {
-    results = await getAllEntries(indexName);
-  }
-
-  const events = results.hits.hits.map((hit) => {
-    return hit["_source"];
-  });
-
-  res.json({ events: events });
-});
-
-
-async function searchDocuments(indexName, query) {
-  const response = await client.search({
-    index: indexName,
-    body: {
-      query: {
-        multi_match: {
-          query: query,
-          fields: ["*"],
-        },
-      },
-      size: 10000,
-    },
-  });
-  return response;
-}
-
-async function getAllEntries(indexName) {
-  const response = await client.search({
-    index: indexName,
-    body: {
-      query: {
-        match_all: {},
-      },
-      size: 10000,
-    },
-  });
-  return response;
-}
 
 
 // This function insert data to elastic search DB.
@@ -93,7 +45,7 @@ async function insertData(indexName, data) {
 
     await client.indices.refresh({index: indexName})
 
-    console.log('Data inserted:', response);
+    console.log('Data inserted!');
   } catch (error) {
     console.error('Error inserting data:', error);
   }
@@ -136,5 +88,5 @@ consumer.on('error', (error) => {
 
 
 app.listen(port, () => {
-  console.log(`http://localhost:${port}`)
+  console.log(`http://localhost:${port} \n Kinaba: http://35.234.119.103:5601`)
 })

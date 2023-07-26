@@ -46,9 +46,9 @@ class astro_simulator:
     
     def build_message(self, date, notfac, loc, type, urg):
         message = {
-            'Date': date,
+            'date': date,
             'notfac': notfac,
-            'loc': loc,
+            'location': loc,
             'type': type,
             'urg': str(urg)
         }
@@ -108,9 +108,11 @@ class astro_simulator:
         
 
 if __name__ == "__main__":
-    sim = astro_simulator(btstrap_servers='35.234.119.103:9092', kf_topic='webevents.dev')
+    sim = astro_simulator(btstrap_servers='35.234.119.103:9092', kf_topic='raw_simulator_events')
+    print("Generating Events!")
     for i in range(10):
         message = sim.generate_data()
         sim.send_data_to_kafka_topic(message)
         time.sleep(2)
+    print("Done Generating Events!")
 

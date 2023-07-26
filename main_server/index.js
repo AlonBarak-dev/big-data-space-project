@@ -2,15 +2,81 @@
 const express = require('express');
 const path = require('path');
 const axios = require("axios");
+const bodyParser = require('body-parser');
+const { Client } = require('@elastic/elasticsearch'); // elastic search
 
 const port = process.env.PORT || 3000;
 const app = express();
 
 const KEY = "DdYnXnHGhGOgBhdoKoIvo5IyprK7EKfqiZtmKrjo";
 const neo_url = "https://api.nasa.gov/neo/rest/v1/feed";
+const indexName = 'simulator_events'; // Elastic search - index name for simulator events
+
+// Create a client instance
+const client = new Client({
+  node: `http://35.234.119.103:9200`,
+  auth: {
+    username: 'elastic',
+    password: 'changeme'
+  }
+})
 
 // Serve static files from the React build directory
 app.use(express.static(path.join(__dirname, 'build')));
+app.use(bodyParser.json());
+
+
+// This function return the events list.
+app.get("/get_event_list", async (req, res) => {
+  const queryValue = req.query.query;
+  let results;
+
+  if (queryValue) {
+    results = await searchDocuments(indexName, queryValue);
+    console.log(results);
+    console.log("Searching For: ", queryValue);
+  } else {
+    console.log("Searching for all enteries")
+    results = await getAllEntries(indexName);
+  }
+
+  const events = results.hits.hits.map((hit) => {
+    return hit["_source"];
+  });
+
+  res.json({ events: events });
+  console.log("done")
+});
+
+
+async function searchDocuments(indexName, query) {
+  const response = await client.search({
+    index: indexName,
+    body: {
+      query: {
+        multi_match: {
+          query: query,
+          fields: ["*"],
+        },
+      },
+      size: 10000,
+    },
+  });
+  return response;
+}
+
+async function getAllEntries(indexName) {
+  const response = await client.search({
+    index: indexName,
+    body: {
+      query: {
+        match_all: {},
+      },
+      size: 10000,
+    },
+  });
+  return response;
+}
 
 app.get("/get_neos", (req, res) => {
   const end_date = new Date();
