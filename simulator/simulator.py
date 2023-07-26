@@ -7,7 +7,7 @@ from confluent_kafka import Producer
 
 class astro_simulator:
     
-    def __init__(self) -> None:
+    def __init__(self, kf_topic, btstrap_servers) -> None:
         self.date = ""
         self.notfac = ""
         self.loc = ""
@@ -20,8 +20,8 @@ class astro_simulator:
         self.types = ['GRB', 'Apparent Brightness Rise', 'UV Rise', 'X-Ray Rise', 'Comet']
         self.url = 'http://localhost:3001/simdata'  # change when dumping REST!
         self.headers = {'Content-Type': 'application/json'}
-        self.bootstrap_servers = '35.234.119.103:9092'
-        self.kafka_topic = 'webevents.dev'
+        self.bootstrap_servers = btstrap_servers
+        self.kafka_topic = kf_topic
         
     def publish_data(self, data):
         """_summary_
@@ -60,7 +60,7 @@ class astro_simulator:
         self.notfac = self.list_of_telescopes[random.randrange(0, 11)]
         self.loc = self.generate_ra()
         self.type = self.types[random.randrange(0, 5)]
-        self.urg = random.randrange(0, 5)
+        self.urg = random.randrange(1, 6)
         
         return self.build_message(self.date, self.notfac, self.loc, self.type, self.urg)
     
@@ -108,14 +108,9 @@ class astro_simulator:
         
 
 if __name__ == "__main__":
-    sim = astro_simulator()
+    sim = astro_simulator(btstrap_servers='35.234.119.103:9092', kf_topic='webevents.dev')
     for i in range(10):
         message = sim.generate_data()
-        
-        bootstrap_servers = '35.234.119.103:9092'
-        kafka_topic = 'webevents.dev'
-        
         sim.send_data_to_kafka_topic(message)
-        
         time.sleep(2)
 
