@@ -94,14 +94,14 @@ async function getAllEntries(indexName) {
 app.get("/get_neos_from_db", async (req, res) => {
   const key = "neo_list"
   try {
-    const value = await getValueFromCacheOrDisk(key);
+    const value = await getValueFromCacheOrDisk(key, neoIndexName);
     res.json({ key, value });
   } catch (err) {
     res.status(500).json({ error: "An error occurred while fetching data." });
   }
 })
 
-async function getValueFromCacheOrDisk(key) {
+async function getValueFromCacheOrDisk(key, indexName) {
   // Try to get the value from Redis
   return new Promise((resolve, reject) => {
     redis.get(key, async (err, value) => {
@@ -118,7 +118,7 @@ async function getValueFromCacheOrDisk(key) {
         try {
           // If the value does not exist in Redis, search in Elasticsearch
           const { body } = await client.search({
-            index: neoIndexName, // Replace with your Elasticsearch index
+            index: indexName, // Replace with your Elasticsearch index
             body: {
               query: {
                 term: {
