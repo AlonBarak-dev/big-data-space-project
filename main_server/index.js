@@ -44,7 +44,6 @@ app.get("/get_event_list", async (req, res) => {
 
   if (queryValue) {
     results = await searchDocuments(simIndexName, queryValue);
-    console.log(results);
     console.log("Searching For: ", queryValue);
   } else {
     console.log("Searching for all enteries")
@@ -164,7 +163,6 @@ app.get("/get_event_list", async (req, res) => {
 
 	if (queryValue) {
 		results = await searchDocuments(index, queryValue);
-		console.log(results);
 		console.log("Searching For: ", queryValue);
 	} else {
 		results = await getAllEntries(index);
