@@ -157,24 +157,6 @@ app.get("/sun", async(req, res) => {
 	res.json(sunData);
 });
 
-app.get("/get_event_list", async (req, res) => {
-	const queryValue = req.query.query;
-	let results;
-
-	if (queryValue) {
-		results = await searchDocuments(index, queryValue);
-		console.log("Searching For: ", queryValue);
-	} else {
-		results = await getAllEntries(index);
-	}
-
-	const events = results.hits.hits.map((hit) => {
-		return hit["_source"];
-	});
-
-	res.json({ events: events });
-});
-
 // Handle requests for React pages
 app.get("*", (req, res) => {
 	res.sendFile(path.join(__dirname, "build", "index.html"));
@@ -183,33 +165,4 @@ app.get("*", (req, res) => {
 app.listen(port, () => {
 	console.log(`Server is listening on port ${port}`);
 });
-
-async function searchDocuments(index, query) {
-	const response = await client.search({
-		index: index,
-		body: {
-			query: {
-				multi_match: {
-					query: query,
-					fields: ["*"],
-				},
-			},
-			size: 10000,
-		},
-	});
-	return response;
-}
-
-async function getAllEntries(index) {
-	const response = await client.search({
-		index: index,
-		body: {
-			query: {
-				match_all: {},
-			},
-			size: 10000,
-		},
-	});
-	return response;
-}
 
