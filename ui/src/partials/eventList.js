@@ -47,21 +47,18 @@ const EventListView = () => {
   }
 
   return (
-    <div>
-      <h3>Events</h3>
-      <DataTable
-        table={{
-          columns: [
-            { Header: "date", accessor: "date", width: "20%" },
-            { Header: "location", accessor: "location", width: "20%" },
-            { Header: "notifying factor", accessor: "notfac", width: "20%" },
-            { Header: "type", accessor: "type", width: "20%" },
-            { Header: "urgancy", accessor: "urg", width: "20%" },
-          ],
-          rows: eventList.reverse(),
-        }}
-      />
-    </div>
+    <DataTable
+      table={{
+        columns: [
+          { Header: "date", accessor: "date", width: "20%" },
+          { Header: "location", accessor: "location", width: "20%" },
+          { Header: "notifying factor", accessor: "notfac", width: "20%" },
+          { Header: "type", accessor: "type", width: "20%" },
+          { Header: "urgancy", accessor: "urg", width: "20%" },
+        ],
+        rows: eventList.reverse(),
+      }}
+    />
   );
 };
 

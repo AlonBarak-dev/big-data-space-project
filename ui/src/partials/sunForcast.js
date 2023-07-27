@@ -35,18 +35,15 @@ const SunForcastPartial = () => {
   }
 
   return (
-    <div>
-      <h3>Sun Forcast</h3>
-      <MDBox mb={1.5} py={2.5} px={1.5} color={"white"} bgColor={"green"} borderRadius={10}>
-        <h3>Details</h3>
-        <p>
-          Right Ascension: {sunData["rightAscension"]} <br />
-          Declination: {sunData["declination"]} <br />
-          Constellation: {sunData["constellation"]} <br />
-          Magnitude: {sunData["magnitude"]} <br />
-        </p>
-      </MDBox>
-    </div>
+    <MDBox mb={1.5} py={2.5} px={1.5} color={"white"} bgColor={"green"} borderRadius={10}>
+      <h3>Details</h3>
+      <p>
+        Right Ascension: {sunData["rightAscension"]} <br />
+        Declination: {sunData["declination"]} <br />
+        Constellation: {sunData["constellation"]} <br />
+        Magnitude: {sunData["magnitude"]} <br />
+      </p>
+    </MDBox>
   );
 };
 

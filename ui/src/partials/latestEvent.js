@@ -41,23 +41,20 @@ const LatestEvent = () => {
   var bgColor = lastEvent["urgancy"] >= 4 ? "red" : "info";
 
   return (
-    <div>
-      <h3>Latest Event</h3>
-      <MDBox mb={1.5} py={3} px={1.5} color={"white"} bgColor={bgColor} borderRadius={10}>
-        <p>
-          Date: {lastEvent["date"]}
-          <br />
-          Location: {lastEvent["location"]}
-          <br />
-          Notifying Factor: {lastEvent["notfac"]}
-          <br />
-          Type: {lastEvent["type"]}
-          <br />
-          Urgancy: {lastEvent["urgancy"]}
-          <br />
-        </p>
-      </MDBox>
-    </div>
+    <MDBox mb={1.5} py={3} px={1.5} color={"white"} bgColor={bgColor} borderRadius={10}>
+      <p>
+        Date: {lastEvent["date"]}
+        <br />
+        Location: {lastEvent["location"]}
+        <br />
+        Notifying Factor: {lastEvent["notfac"]}
+        <br />
+        Type: {lastEvent["type"]}
+        <br />
+        Urgancy: {lastEvent["urgancy"]}
+        <br />
+      </p>
+    </MDBox>
   );
 };
 
