@@ -2,12 +2,17 @@ const express = require('express')
 const bodyParser = require('body-parser');
 const { Client } = require('@elastic/elasticsearch'); // elastic search
 const kafka = require('kafka-node');
+const { MongoClient } = require('mongodb');
 
 const app = express()
 app.use(bodyParser.json());
 
 const port = 3001
 const indexName = 'simulator_events'; // Elastic search - index name for simulator events
+const topicName = 'raw_simulator_events'  // Kafka - topic name
+const url = 'mongodb+srv://big-data-space:Aa123456@big-data-space.wlxmqwy.mongodb.net/?retryWrites=true&w=majority' // MongoDB 
+const simCollectionName = "simulator_raw"
+
 // Create a client instance
 const client = new Client({
   node: `http://35.234.119.103:9200`,
@@ -25,66 +30,18 @@ const kafkaClient = new kafka.KafkaClient({
 const consumer = new kafka.Consumer(
   kafkaClient,
   [
-      { topic: 'webevents.dev', partition: 0 }    // TODO change topic name
+      { topic: topicName, partition: 0 } 
   ],
   {
       autoCommit: false
   }
 );
 
-// This function return the events list.
-app.get("/get_event_list", async (req, res) => {
-  const queryValue = req.query.query;
-  let results;
-
-  if (queryValue) {
-    results = await searchDocuments(indexName, queryValue);
-    console.log(results);
-    console.log("Searching For: ", queryValue);
-  } else {
-    results = await getAllEntries(indexName);
-  }
-
-  const events = results.hits.hits.map((hit) => {
-    return hit["_source"];
-  });
-
-  res.json({ events: events });
-});
-
-
-async function searchDocuments(indexName, query) {
-  const response = await client.search({
-    index: indexName,
-    body: {
-      query: {
-        multi_match: {
-          query: query,
-          fields: ["*"],
-        },
-      },
-      size: 10000,
-    },
-  });
-  return response;
-}
-
-async function getAllEntries(indexName) {
-  const response = await client.search({
-    index: indexName,
-    body: {
-      query: {
-        match_all: {},
-      },
-      size: 10000,
-    },
-  });
-  return response;
-}
-
+// Create a new MongoDB instnace 
+const mongoClient = new MongoClient(url)
 
 // This function insert data to elastic search DB.
-async function insertData(indexName, data) {
+async function insertDataToElastic(indexName, data) {
   try {
     const response = await client.index({
       index: indexName,
@@ -93,19 +50,30 @@ async function insertData(indexName, data) {
 
     await client.indices.refresh({index: indexName})
 
-    console.log('Data inserted:', response);
+    console.log('Data inserted!');
   } catch (error) {
     console.error('Error inserting data:', error);
   }
 }
 
+async function insertDataToMongo(collecetionName, data){
+  try{
+    await mongoClient.connect()
+    const db = mongoClient.db()
+    const collection = db.collection(collecetionName)
+    const result = await collection.insertOne(data)
+    console.log("Data inserted successfully!")
+  } catch(err){
+    console.log("Insertion Failed!", err)
+  }
+}
 
 // Kafka Section:
-
 consumer.on('message', function (message) {
   try{
     const parsedData = JSON.parse(message.value)
-    insertData(indexName, parsedData)
+    insertDataToElastic(indexName, parsedData)
+    insertDataToMongo(simCollectionName, parsedData)
   }
   catch(error){
     console.log(message)
@@ -133,8 +101,6 @@ consumer.on('error', (error) => {
 });
 
 
-
-
 app.listen(port, () => {
-  console.log(`http://localhost:${port}`)
+  console.log(`http://localhost:${port} \n Kinaba: http://35.234.119.103:5601`)
 })
