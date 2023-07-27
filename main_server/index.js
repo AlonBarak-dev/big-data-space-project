@@ -104,7 +104,7 @@ app.get("/get_neos_from_db", async (req, res) => {
 async function getValueFromCacheOrDisk(key) {
   // Try to get the value from Redis
   return new Promise((resolve, reject) => {
-    redisClient.get(key, async (err, value) => {
+    redis.get(key, async (err, value) => {
       if (err) {
         console.error('Redis GET Error:', err);
         reject(err);
@@ -117,7 +117,7 @@ async function getValueFromCacheOrDisk(key) {
       else {  // TODO fit for elastic when Eyal is done!
         try {
           // If the value does not exist in Redis, search in Elasticsearch
-          const { body } = await elasticClient.search({
+          const { body } = await client.search({
             index: neoIndexName, // Replace with your Elasticsearch index
             body: {
               query: {
