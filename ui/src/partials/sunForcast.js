@@ -32,12 +32,16 @@ const SunForcastPartial = () => {
   return (
     <MDBox mb={1.5} py={2.5} px={1.5} color={"white"} bgColor={"green"} borderRadius={10}>
       <h3>Details</h3>
-      <p>
-        Right Ascension: {sunData["rightAscension"]} <br />
-        Declination: {sunData["declination"]} <br />
-        Constellation: {sunData["constellation"]} <br />
-        Magnitude: {sunData["magnitude"]} <br />
-      </p>
+      {sunData ? (
+        <p>
+          Right Ascension: {sunData["rightAscension"]} <br />
+          Declination: {sunData["declination"]} <br />
+          Constellation: {sunData["constellation"]} <br />
+          Magnitude: {sunData["magnitude"]} <br />
+        </p>
+      ) : (
+        <p>Failed to get sun Details</p>
+      )}
     </MDBox>
   );
 };

@@ -47,7 +47,7 @@ const SunForcast = () => {
             <Card>
               <MDBox mx={2} my={2}>
                 <h3>Sun Description</h3>
-                <p>{jsonData["sunDescription"]}</p>
+                {jsonData ? <p>{jsonData["sunDescription"]}</p> : <p>Failed to get sun data</p>}
               </MDBox>
             </Card>
           </Grid>
@@ -60,18 +60,26 @@ const SunForcast = () => {
             <Card>
               <MDBox mx={2} my={2}>
                 <h3>Details</h3>
-                <p>
-                  Right Ascension: {jsonData["rightAscension"]} <br />
-                  Declination: {jsonData["declination"]} <br />
-                  Constellation: {jsonData["constellation"]} <br />
-                  Magnitude: {jsonData["magnitude"]} <br />
-                </p>
+                {jsonData ? (
+                  <p>
+                    Right Ascension: {jsonData["rightAscension"]} <br />
+                    Declination: {jsonData["declination"]} <br />
+                    Constellation: {jsonData["constellation"]} <br />
+                    Magnitude: {jsonData["magnitude"]} <br />
+                  </p>
+                ) : (
+                  <p>Failed to get sun data</p>
+                )}
               </MDBox>
             </Card>
           </Grid>
           <Grid item xs={12} md={12} lg={6}>
             <Card>
-              <Image image_path={jsonData["positionImagePath"]} title="Sun Position" />
+              {jsonData ? (
+                <Image image_path={jsonData["positionImagePath"]} title="Sun Position" />
+              ) : (
+                <p>Failed to get sun data</p>
+              )}
             </Card>
           </Grid>
         </Grid>
