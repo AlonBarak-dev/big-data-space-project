@@ -24,51 +24,12 @@ app.get("/get_neos", async(req, res) => {
 	return res.json({ neo_list: parsedList });
 });
 
-app.get("/sun", (req, res) => {
-	axios
-		.get(sun_url)
-		.then((response) => {
-			const $ = cheerio.load(response.data);
+app.get("/sun", async(req, res) => {
+	const stringifiedSunData = await redis.get("sun_forcast");
+	console.log(stringifiedSunData);
+	const sunData = JSON.parse(stringifiedSunData);
 
-			const sunDescription = $("p.object_headline_text").text();
-			const sunActivityImageURL = $("div.sun_container img").attr("src");
-			const sunPositionURL = $(
-				".main_content > div:nth-child(19) > div:nth-child(8) > div:nth-child(1) > a:nth-child(1) > img:nth-child(1)"
-			).attr("src");
-
-			const rightAscension = $(
-				"div.keyinfobox:nth-child(8) > ar:nth-child(2)"
-			).text();
-
-			const declination = $(
-				"div.keyinfobox:nth-child(9) > ar:nth-child(2)"
-			).text();
-
-			const constellation = $(
-				"div.keyinfobox:nth-child(10) > ar:nth-child(2) > a:nth-child(1)"
-			).text();
-
-			const magnitude = $(
-				"div.keyinfobox:nth-child(11) > ar:nth-child(2)"
-			).text();
-
-			const activityImageURL = skylive_url + sunActivityImageURL;
-			const positionImageURL = skylive_url + sunPositionURL;
-
-			res.json({
-				sunDescription: sunDescription,
-				activityImagePath: activityImageURL,
-				positionImagePath: positionImageURL,
-				rightAscension: rightAscension,
-				declination: declination,
-				constellation: constellation,
-				magnitude: magnitude,
-			});
-		})
-		.catch((error) => {
-			console.error(error);
-			res.status(500).send("Internal Server Error");
-		});
+	res.json(sunData);
 });
 
 app.get("/get_event_list", async (req, res) => {
@@ -114,7 +75,6 @@ const scrapNeos = () => {
 			console.log("New request!");
 			const result = processNEOResponse(response.data);
 			const stringifiedResults = result.map((item) => JSON.stringify(item))
-			console.log("Stringified results: ", stringifiedResults);
 			
 			await redis.del("neos");
 			await redis.rpush("neos", ...stringifiedResults);
@@ -125,7 +85,7 @@ const scrapNeos = () => {
 		});
 };
 
-setInterval(scrapNeos, 3000);
+setInterval(scrapNeos, 3_600_000);
 
 const processNEOResponse = function (res) {
 	var neos = res.near_earth_objects;
@@ -240,7 +200,7 @@ const getSunData = async() => {
 	const activityImageURL = skylive_url + sunActivityImageURL;
 	const positionImageURL = skylive_url + sunPositionURL;
 
-	return Promise.resolve({
+	return {
 		sunDescription: sunDescription,
 		activityImagePath: activityImageURL,
 		positionImagePath: positionImageURL,
@@ -248,5 +208,19 @@ const getSunData = async() => {
 		declination: declination,
 		constellation: constellation,
 		magnitude: magnitude,
-	});
-} 
+	};
+}
+
+const updateSunData = () => {
+	console.log("Updating sun data");
+	getSunData()
+		.then(async(data) => {
+			await redis.set("sun_forcast", JSON.stringify(data))
+			console.log("Sun data updated successfuly!");
+		})
+		.catch((error) => {
+			console.error("Failed to add sun data to redis");
+		})
+}
+
+setInterval(updateSunData, 3000);

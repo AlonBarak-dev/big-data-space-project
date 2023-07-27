@@ -1,7 +1,5 @@
 const express = require("express");
 const path = require("path");
-const axios = require("axios");
-const cheerio = require("cheerio");
 const bodyParser = require("body-parser");
 const { Client } = require("elasticsearch");
 const Redis = require("ioredis");
@@ -12,8 +10,6 @@ const redis = new Redis();
 
 const port = 3000;
 const index = "events";
-const skylive_url = "https://theskylive.com/";
-const sun_url = skylive_url + "sun-info";
 
 app.use(bodyParser.json());
 app.use(express.static(__dirname + "/build"));
@@ -25,52 +21,11 @@ app.get("/get_neos", async(req, res) => {
 	return res.json({ neo_list: parsedList });
 });
     
-app.get("/sun", (req, res) => {
-	axios
-		.get(sun_url)
-		.then((response) => {
-			const $ = cheerio.load(response.data);
+app.get("/sun", async(req, res) => {
+	const stringifiedSunData = await redis.get("sun_forcast");
+	const sunData = JSON.parse(stringifiedSunData);
 
-			const sunDescription = $("p.object_headline_text").text();
-			const sunActivityImageURL = $("div.sun_container img").attr("src");
-			const sunPositionURL = $(
-				".main_content > div:nth-child(19) > div:nth-child(8) > div:nth-child(1) > a:nth-child(1) > img:nth-child(1)"
-			).attr("src");
-
-			const rightAscension = $(
-				"div.keyinfobox:nth-child(8) > ar:nth-child(2)"
-			).text();
-
-			const declination = $(
-				"div.keyinfobox:nth-child(9) > ar:nth-child(2)"
-			).text();
-
-			const constellation = $(
-				"div.keyinfobox:nth-child(10) > ar:nth-child(2) > a:nth-child(1)"
-			).text();
-
-			const magnitude = $(
-				"div.keyinfobox:nth-child(11) > ar:nth-child(2)"
-			).text();
-
-			const activityImageURL = skylive_url + sunActivityImageURL;
-			const positionImageURL = skylive_url + sunPositionURL;
-
-			res.json({
-				sunDescription: sunDescription,
-				activityImagePath: activityImageURL,
-				positionImagePath: positionImageURL,
-				rightAscension: rightAscension,
-				declination: declination,
-				constellation: constellation,
-				magnitude: magnitude,
-			});
-		})
-		.catch((error) => {
-			// Handle any errors that occurred during the request
-			console.error(error);
-			res.status(500).send("Internal Server Error");
-		});
+	res.json(sunData);
 });
 
 app.get("/get_event_list", async (req, res) => {

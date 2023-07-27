@@ -46,7 +46,7 @@ const Neos = () => {
       <DashboardNavbar />
       <MDBox py={3}>
         <Grid container spacing={3}>
-          <Grid item xs={12} md={6} lg={8}>
+          <Grid item xs={12} md={12} lg={4}>
             <h3>Near Earth Objects</h3>
             {jsonData ? (
               <DataTable
