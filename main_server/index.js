@@ -147,7 +147,7 @@ async function getValueFromCacheOrDisk(key) {
 app.get("/get_neos", async(req, res) => {
 	const stringifiedList = await redis.lrange("neos", 0, -1);
 	const parsedList = stringifiedList.map((item) => JSON.parse(item));
-	console.log("i am here looking for neos");
+
 	return res.json({ neo_list: parsedList });
 });
     

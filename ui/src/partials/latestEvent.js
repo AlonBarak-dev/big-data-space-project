@@ -4,7 +4,6 @@ import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 
 import MDBox from "../components/MDBox";
-import DashboardLayout from "../examples/LayoutContainers/DashboardLayout";
 
 const LatestEvent = () => {
   const [jsonData, setJsonData] = useState(null);
