@@ -2,16 +2,31 @@ const express = require("express");
 const axios = require("axios");
 const cheerio = require("cheerio");
 const Redis = require("ioredis");
+const { Client } = require('@elastic/elasticsearch'); // elastic search
 
 const KEY = "DdYnXnHGhGOgBhdoKoIvo5IyprK7EKfqiZtmKrjo";
 
 const app = express();
-const redis = new Redis();
 
 const port = 3333;
 const neo_url = "https://api.nasa.gov/neo/rest/v1/feed";
 const skylive_url = "https://theskylive.com/";
 const sun_url = skylive_url + "sun-info";
+
+// Create a new Elastic client instance
+const client = new Client({
+  node: `http://35.234.119.103:9200`,
+  auth: {
+    username: 'elastic',
+    password: 'changeme'
+  }
+})
+
+// Create a new Redis client instance
+const redis = new Redis({
+  host: '35.234.119.103', // Redis server host
+  port: 6379,        // Redis server port
+});
 
 app.listen(port, () => {
   console.log(`Server is listening on port ${port}`);

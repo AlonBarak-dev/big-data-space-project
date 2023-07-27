@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import Skeleton from "react-loading-skeleton";
 
 import MDBox from "../components/MDBox";
-import DashboardLayout from "../examples/LayoutContainers/DashboardLayout";
 
 const SunForcastPartial = () => {
   const [sunData, setSunData] = useState(null);
@@ -27,11 +26,7 @@ const SunForcastPartial = () => {
   }, []);
 
   if (loading) {
-    return (
-      <DashboardLayout>
-        <Skeleton />
-      </DashboardLayout>
-    );
+    return <Skeleton />;
   }
 
   return (

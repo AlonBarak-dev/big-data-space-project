@@ -28,11 +28,7 @@ const LatestEvent = () => {
   }, []);
 
   if (loading) {
-    return (
-      <DashboardLayout>
-        <Skeleton />
-      </DashboardLayout>
-    );
+    return <Skeleton />;
   }
 
   const eventList = jsonData["events"];

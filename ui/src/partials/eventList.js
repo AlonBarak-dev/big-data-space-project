@@ -28,22 +28,13 @@ const EventListView = () => {
   }, []);
 
   if (loading) {
-    return (
-      <DashboardLayout>
-        <Skeleton />
-      </DashboardLayout>
-    );
+    return <Skeleton />;
   }
 
   const eventList = jsonData["events"];
 
   if (eventList.length == 0) {
-    return (
-      <DashboardLayout>
-        <DashboardNavbar />
-        <h3>No Events!</h3>
-      </DashboardLayout>
-    );
+    return <h3>No Events!</h3>;
   }
 
   return (

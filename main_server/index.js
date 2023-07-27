@@ -6,8 +6,6 @@ const { Client } = require('@elastic/elasticsearch'); // elastic search
 const Redis = require('ioredis');   // redis
 
 const app = express();
-const client = new Client({ node: "http://localhost:9200" });
-const redis = new Redis(); 
 
 const port = 3000;
 const index = "events";
@@ -15,8 +13,6 @@ const index = "events";
 app.use(bodyParser.json());
 app.use(express.static(__dirname + "/build"));
 
-const KEY = "DdYnXnHGhGOgBhdoKoIvo5IyprK7EKfqiZtmKrjo";
-const neo_url = "https://api.nasa.gov/neo/rest/v1/feed";
 const simIndexName = 'simulator_events'; // Elastic search - index name for simulator events
 const neoIndexName = 'neos'
 
@@ -151,7 +147,7 @@ async function getValueFromCacheOrDisk(key) {
 app.get("/get_neos", async(req, res) => {
 	const stringifiedList = await redis.lrange("neos", 0, -1);
 	const parsedList = stringifiedList.map((item) => JSON.parse(item));
-
+	console.log("i am here looking for neos");
 	return res.json({ neo_list: parsedList });
 });
     
