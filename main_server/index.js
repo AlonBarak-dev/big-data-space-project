@@ -94,7 +94,7 @@ async function getAllEntries(indexName) {
 app.get("/get_neos_from_db", async (req, res) => {
   const key = "neo_list"
   try {
-    const value = await getValueFromRedisOrElasticsearch(key);
+    const value = await getValueFromCacheOrDisk(key);
     res.json({ key, value });
   } catch (err) {
     res.status(500).json({ error: "An error occurred while fetching data." });
