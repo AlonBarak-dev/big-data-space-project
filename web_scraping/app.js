@@ -1,7 +1,6 @@
 const express = require("express");
 const axios = require("axios");
 const cheerio = require("cheerio");
-const { Client } = require("elasticsearch");
 const Redis = require("ioredis");
 
 const KEY = "DdYnXnHGhGOgBhdoKoIvo5IyprK7EKfqiZtmKrjo";
