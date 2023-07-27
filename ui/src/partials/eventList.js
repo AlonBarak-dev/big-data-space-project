@@ -2,8 +2,6 @@ import { useState, useEffect } from "react";
 
 import Skeleton from "react-loading-skeleton";
 
-import DashboardLayout from "../examples/LayoutContainers/DashboardLayout";
-import DashboardNavbar from "../examples/Navbars/DashboardNavbar";
 import DataTable from "examples/Tables/DataTable";
 
 const EventListView = () => {
@@ -45,7 +43,7 @@ const EventListView = () => {
           { Header: "location", accessor: "location", width: "20%" },
           { Header: "notifying factor", accessor: "notfac", width: "20%" },
           { Header: "type", accessor: "type", width: "20%" },
-          { Header: "urgancy", accessor: "urg", width: "20%" },
+          { Header: "urgency", accessor: "urg", width: "20%" },
         ],
         rows: eventList.reverse(),
       }}

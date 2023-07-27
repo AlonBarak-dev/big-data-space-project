@@ -46,7 +46,7 @@ const LatestEvent = () => {
         <br />
         Type: {lastEvent["type"]}
         <br />
-        Urgancy: {lastEvent["urgancy"]}
+        Urgency: {lastEvent["urg"]}
         <br />
       </p>
     </MDBox>

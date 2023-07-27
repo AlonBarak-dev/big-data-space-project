@@ -87,7 +87,7 @@ const Search = () => {
                 { Header: "location", accessor: "location", width: "20%" },
                 { Header: "notifying factor", accessor: "notfac", width: "20%" },
                 { Header: "type", accessor: "type", width: "20%" },
-                { Header: "urgancy", accessor: "urgancy", width: "20%" },
+                { Header: "urgency", accessor: "urg", width: "20%" },
               ],
               rows: eventList.reverse(),
             }}
