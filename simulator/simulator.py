@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 import random
 import time
 from confluent_kafka import Producer
+import redis
 
 class astro_simulator:
     
@@ -22,7 +23,39 @@ class astro_simulator:
         self.headers = {'Content-Type': 'application/json'}
         self.bootstrap_servers = btstrap_servers
         self.kafka_topic = kf_topic
+        # load Redis
+        self.redis_db = self.load_redis()
+        self.redis_key = "Bright_star_catalog"
+        # self.load_catalog_to_redis()
+        self.catalog_len = self.redis_db.hlen("Bright_star_catalog")
         
+    def load_redis(self):
+        redis_host = "35.234.119.103"
+        redis_port = 6379
+        try:
+            redis_db = redis.StrictRedis(redis_host, redis_port, decode_responses=True)
+            print("Redis - Connected successfully!")    
+            return redis_db
+        except(Exception):
+            print("Redis - Failed")
+            return None
+    
+    def load_catalog_to_redis(self, file_path="simulator/BSC.json"):
+        file = open(file_path, "r")
+        catalog_list = json.load(file)
+        names_catalog = {}
+        for idx, item in enumerate(catalog_list):
+            name = item["Title HD"]
+            names_catalog[str(idx)] = name
+        
+        for k, v in names_catalog.items():
+            self.redis_db.hset(self.redis_key, k, v)
+            
+            
+        print("Catalog Saved successfully in Redis!")
+        
+    
+    
     def publish_data(self, data):
         """_summary_
             This method sends data using REST api.
@@ -36,16 +69,29 @@ class astro_simulator:
         else:
             print('Failed to publish data:', response.text)
     
-    def generate_ra(self):
+    def generate_location(self):
         # Generate random RA (Right Ascension) in hours
         ra_hours = random.randint(0, 23)
         ra_minutes = random.randint(0, 59)
         ra_seconds = random.randint(0, 59)
-        ra = f"{ra_hours:02d}h {ra_minutes:02d}m {ra_seconds:02d}s"
-        return ra
+        ra = f"{ra_hours:02d}:{ra_minutes:02d}:{ra_seconds:02d} "
+        
+        dec_degrees = random.randint(-90, 90)
+        dec_minutes = random.randint(0, 59)
+        dec_seconds = random.randint(0, 59)
+        dec = "+" if dec_degrees > 0 else ""
+        dec += f"{dec_degrees:02d}:{dec_minutes:02d}:{dec_seconds:02d}"
+                
+        return ra + dec
     
-    def build_message(self, date, notfac, loc, type, urg):
+    def generate_star(self):
+        star_idx = random.randint(0, self.catalog_len)
+        star_name = self.redis_db.hget(self.redis_key, star_idx)
+        return star_name
+    
+    def build_message(self, star_name,  date, notfac, loc, type, urg):
         message = {
+            'star': star_name,
             'date': date,
             'notfac': notfac,
             'location': loc,
@@ -56,13 +102,15 @@ class astro_simulator:
         return message
             
     def generate_data(self):
-        self.date = str(datetime.now(timezone.utc))
-        self.notfac = self.list_of_telescopes[random.randrange(0, 11)]
-        self.loc = self.generate_ra()
-        self.type = self.types[random.randrange(0, 5)]
-        self.urg = random.randrange(1, 6)
         
-        return self.build_message(self.date, self.notfac, self.loc, self.type, self.urg)
+        date = str(datetime.now(timezone.utc))
+        notfac = self.list_of_telescopes[random.randrange(0, 11)]
+        loc = self.generate_location()
+        type = self.types[random.randrange(0, 5)]
+        urg = random.randrange(1, 6)
+        star_name = self.generate_star()
+        
+        return self.build_message(star_name, date, notfac, loc, type, urg)
     
     def send_data_to_kafka_topic(self, data):
         """
@@ -112,6 +160,7 @@ if __name__ == "__main__":
     print("Generating Events!")
     for i in range(10):
         message = sim.generate_data()
+        print(message)
         sim.send_data_to_kafka_topic(message)
         time.sleep(2)
     print("Done Generating Events!")

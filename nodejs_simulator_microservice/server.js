@@ -33,7 +33,7 @@ const consumer = new kafka.Consumer(
       { topic: topicName, partition: 0 } 
   ],
   {
-      autoCommit: false
+      autoCommit: true
   }
 );
 
