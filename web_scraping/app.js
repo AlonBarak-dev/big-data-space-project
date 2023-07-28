@@ -3,6 +3,7 @@ const axios = require("axios");
 const cheerio = require("cheerio");
 const Redis = require("ioredis");
 const { Client } = require('@elastic/elasticsearch'); // elastic search
+const { MongoClient } = require('mongodb');
 
 const KEY = "DdYnXnHGhGOgBhdoKoIvo5IyprK7EKfqiZtmKrjo";
 
@@ -12,6 +13,7 @@ const port = 3333;
 const neo_url = "https://api.nasa.gov/neo/rest/v1/feed";
 const skylive_url = "https://theskylive.com/";
 const sun_url = skylive_url + "sun-info";
+const mongoURL = 'mongodb+srv://big-data-space:Aa123456@big-data-space.wlxmqwy.mongodb.net/?retryWrites=true&w=majority' // MongoDB 
 
 // Create a new Elastic client instance
 const client = new Client({
@@ -27,6 +29,8 @@ const redis = new Redis({
 	host: '35.234.119.103', // Redis server host
 	port: 6379,        // Redis server port
 });
+
+const mongoClient = new MongoClient(mongoURL);
 
 app.listen(port, () => {
 	console.log(`Server is listening on port ${port}`);
@@ -120,7 +124,7 @@ function isInNext24Hours(dateTimeString) {
 	}
 }
 
-const getSunData = async () => {
+const getVisualSunData = async () => {
 	const response = await axios.get(sun_url);
 	const $ = cheerio.load(response.data);
 
@@ -153,12 +157,55 @@ const getSunData = async () => {
 		declination: declination,
 		constellation: constellation,
 		magnitude: magnitude,
-	};
+	}; 
 };
+
+const getSunDataForMongo = async() => {
+	const userAgentString = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36'" 
+	try {
+		// get flare data
+		const referer = "https://www.spaceweatherlive.com/en/solar-activity/solar-flares.html";
+		var config = {
+			headers: {
+				'User-Agent': userAgentString,
+				'Referer': referer
+			}
+		};
+
+		const solarFlaresUrl = "https://www.spaceweatherlive.com/includes/live-data.php?object=solar_flare_3d&lang=EN"
+		var response = await axios.get(solarFlaresUrl, config);
+		var $ = cheerio.load(response.data.val);
+
+		const currentSolarFlareValue = $("div.Cclass").text();
+		const solarFlareClass = currentSolarFlareValue[0];
+		const solarFlareValue = parseFloat(currentSolarFlareValue.slice(1)); 
+		
+		// get sunspots data
+		config = {
+			headers: {
+				'User-Agent': userAgentString,
+			}
+		};
+
+		const sunspotsUrl = "https://www.spaceweatherlive.com/en/solar-activity.html"
+		response = await axios.get(sunspotsUrl, config);
+		$ = cheerio.load(response.data);
+		const numberOfSunSpots = $("table.mb-0:nth-child(3) > tbody:nth-child(1) > tr:nth-child(1) > td:nth-child(2) > span:nth-child(1)").text();
+
+		const result = {
+			solar_flare_class: solarFlareClass,
+			solar_flare_value: solarFlareValue,
+			number_of_sun_spots: parseInt(numberOfSunSpots)
+		};
+		console.log("Result: ", result);
+	} catch (error) {
+		console.error("Error fetching data: ", error);
+	}
+}
 
 const updateSunData = () => {
 	console.log("Updating sun data");
-	getSunData()
+	getVisualSunData ()
 		.then(async (data) => {
 			await redis.set("sun_forcast", JSON.stringify(data));
 			console.log("Sun data updated successfuly!");
@@ -183,5 +230,18 @@ async function insertDataToElastic(indexName, data) {
 	}
 }
 
+async function insertDataToMongo(collecetionName, data){
+	try{
+		await mongoClient.connect()
+		const db = mongoClient.db()
+		const collection = db.collection(collecetionName)
+		const result = await collection.insertOne(data)
+		console.log("Data inserted successfully!")
+	} catch(err){
+		console.log("Insertion Failed!", err)
+	}
+}
+
 setInterval(updateSunData, 60_000);
 setInterval(scrapNeos, 60_000);
+setInterval(getSunDataForMongo, 3000);
