@@ -59,7 +59,7 @@ app.get("/get_event_list", async (req, res) => {
   console.log("done")
 });
 
-app.get("/get_event_list_date/:from/:to/:star_name", async (req, res) => {
+app.get("/get_event_list_date_by_star/:from/:to/:star_name", async (req, res) => {
   const from = req.params.from
   const to = req.params.to
   const star_name = req.params.star_name
@@ -70,6 +70,19 @@ app.get("/get_event_list_date/:from/:to/:star_name", async (req, res) => {
 
   res.json({events: filtered_events_in_range})
   
+})
+
+app.get("/get_event_list_date_by_type/:from/:to/:type", async (req, res) => {
+  const from = req.params.from
+  const to = req.params.to
+  const type = req.params.type
+  
+  const events_in_range = await searchEventsInRange(from, to)
+
+  const filtered_events_in_range = events_in_range.filter((event_in_range) => event_in_range.type == type)
+
+  res.json({events: filtered_events_in_range})
+
 })
 
 
