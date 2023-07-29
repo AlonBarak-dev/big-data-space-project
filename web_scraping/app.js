@@ -336,42 +336,52 @@ const updateSunData = () => {
 };
 
 const updateSunDataMongo = () => {
+	const db_name = "big-data-test";
 	getSunDataForMongo()
 	.then((data) => {
 		const solar_flare_data = data.solar_flare_data;
+		const solaFlareList = []
 		for (let entry in solar_flare_data) {
-			const flareEntryDate = new Date(solar_flare_data[entry][0]).toISOString();
-			const flareEntryValue = solar_flare_data[entry][1];
-			insertDataToMongo("solar_flares", {date: flareEntryDate, value: flareEntryValue});
+			const flareEntryDate = solar_flare_data[entry]["date"];
+			const flareEntryValue = solar_flare_data[entry]["value"];
+			solaFlareList.push({date: flareEntryDate, value: flareEntryValue});
 		}
+		insertDataToMongoMany(db_name, "solar_flares", solaFlareList);
 
 		const currentDate = Date.now();
 		const nSunSpots = data.number_of_sun_spots;
 		const nSunSpotsEntry = {date: currentDate, value: nSunSpots};
-		insertDataToMongo("n_sunspots", nSunSpotsEntry);
+		insertDataToMongo(db_name, "n_sunspots", nSunSpotsEntry);
 
 		const sunspotsImageData = data.images.sunspots;
 		const solarFlaresImageData = data.images.solar_falres;
 		const sunspotsEntry = {date: currentDate, value: sunspotsImageData}
 		const solarFlareEntry = {date: currentDate, value: solarFlaresImageData}
 		
-		insertDataToMongo("sunspot_images", sunspotsEntry);
-		insertDataToMongo("solar_flare_images", solarFlareEntry);
+		insertDataToMongo(db_name, "sunspot_images", sunspotsEntry);
+		insertDataToMongo(db_name, "solar_flare_images", solarFlareEntry);
 		
+		const cmesList = [];
 		for (let entryKey in data.cmes_list) {
-			insertDataToMongo("cmes", data.cmes_list[entryKey]);
+			const [year, month, day, hours, minutes] = data.cmes_list[entryKey]["Onset time"].split(/[/ :]/);
+			const dateObject = new Date(year, month - 1, day, hours, minutes);
+			data.cmes_list[entryKey]["Onset time"] = dateObject.getTime();
+			cmesList.push(data.cmes_list[entryKey]);
 		}
-
+		insertDataToMongoMany(db_name, "cmes", cmesList);
+		
+		const regoinsList = [];
 		for (let regionKey in data.sunspot_regions) {
 			const entry = {date: currentDate};
 			for (let key in data.sunspot_regions[regionKey]) {
 				entry[key] = data.sunspot_regions[regionKey][key];
 			}
-			insertDataToMongo("sunspot_regions", entry);
+			regoinsList.push(entry);
 		}
+		insertDataToMongoMany(db_name, "sunspot_regions", regoinsList);
 
 		const forcastStringEntry = {date: currentDate, value: data.sun_forcast_string};
-		insertDataToMongo("sun_frocast", forcastStringEntry);	
+		insertDataToMongo(db_name, "sun_frocast", forcastStringEntry);	
 
 		console.log("Mongo update done!");
 	});
@@ -392,18 +402,32 @@ async function insertDataToElastic(indexName, data) {
 	}
 }
 
-async function insertDataToMongo(collecetionName, data){
+async function insertDataToMongo(db_name, collecetionName, data){
 	try{
 		await mongoClient.connect()
-		const db = mongoClient.db()
+		const db = mongoClient.db(db_name)
 		const collection = db.collection(collecetionName)
 		const result = await collection.insertOne(data)
 		console.log("Data inserted successfully!")
 	} catch(err){
 		console.log("Insertion Failed!", err)
+		console.log("Data: ", data);
+	}
+}
+
+async function insertDataToMongoMany(db_name, collecetionName, data){
+	try{
+		await mongoClient.connect()
+		const db = mongoClient.db(db_name)
+		const collection = db.collection(collecetionName)
+		const result = await collection.insertMany(data)
+		console.log("Data inserted successfully!")
+	} catch(err){
+		console.log("Insertion Failed!", err)
+		console.log("Data: ", data);
 	}
 }
 
 setInterval(updateSunData, 60_000);
 setInterval(scrapNeos, 60_000);
-setInterval(updateSunDataMongo, 60_000);
+setInterval(updateSunDataMongo, 3000);
