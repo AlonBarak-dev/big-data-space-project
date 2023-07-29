@@ -86,6 +86,20 @@ app.get("/get_event_list_date_by_type/:from/:to/:type", async (req, res) => {
 })
 
 
+app.get("/get_event_list_date_by_notfac/:from/:to/:notfac", async (req, res) => {
+  const from = req.params.from
+  const to = req.params.to
+  const notfac = req.params.notfac
+  
+  const events_in_range = await searchEventsInRange(from, to)
+
+  const filtered_events_in_range = events_in_range.filter((event_in_range) => event_in_range.notfac == notfac)
+
+  res.json({events: filtered_events_in_range})
+
+})
+
+
 async function searchDocuments(indexName, query) {
   const response = await client.search({
     index: indexName,
