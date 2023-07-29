@@ -336,7 +336,7 @@ const updateSunData = () => {
 };
 
 const updateSunDataMongo = () => {
-	const db_name = "big-data-test";
+	const db_name = "big-data";
 	getSunDataForMongo()
 	.then((data) => {
 		const solar_flare_data = data.solar_flare_data;
