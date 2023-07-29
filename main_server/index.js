@@ -59,6 +59,15 @@ app.get("/get_event_list", async (req, res) => {
   console.log("done")
 });
 
+app.get("/get_event_list_date/:from/:to", async (req, res) => {
+  const from = req.params.from
+  const to = req.params.to
+
+  const events_in_range = await searchEventsInRange(from, to)
+
+res.json({events: events_in_range})
+})
+
 app.get("/get_event_list_date_by_star/:from/:to/:star_name", async (req, res) => {
   const from = req.params.from
   const to = req.params.to
