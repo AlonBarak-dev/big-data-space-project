@@ -406,4 +406,4 @@ async function insertDataToMongo(collecetionName, data){
 
 setInterval(updateSunData, 60_000);
 setInterval(scrapNeos, 60_000);
-setInterval(updateSunDataMongo, 3000);
+setInterval(updateSunDataMongo, 60_000);
