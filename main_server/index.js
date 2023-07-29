@@ -100,6 +100,37 @@ app.get("/get_event_list_date_by_notfac/:from/:to/:notfac", async (req, res) => 
 })
 
 
+// GET endpoint to count JSONs by urgency
+app.get('/countByUrgency', async (req, res) => {
+  try {
+    // Initialize an object to store the counts
+    const countByUrgency = {
+      1: 0,
+      2: 0,
+      3: 0,
+      4: 0,
+      5: 0,
+    };
+
+    var jsonArray = await getAllEntries(simIndexName)
+    jsonArray = jsonArray.hits.hits.map((hit) => {
+      return hit["_source"];
+    })
+
+    // Loop through the array of JSONs and update the counts
+    jsonArray.forEach((json) => {
+      var urgency = json.urg;
+      countByUrgency[urgency]++;
+    });
+
+    res.json(countByUrgency);
+  } catch (error) {
+    console.error('Error while counting JSONs by urgency:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
 async function searchDocuments(indexName, query) {
   const response = await client.search({
     index: indexName,
