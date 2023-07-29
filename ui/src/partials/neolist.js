@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Skeleton from "react-loading-skeleton";
 
 import DataTable from "examples/Tables/DataTable";
+import { Card } from "@mui/material";
 
 const NeoList = () => {
   const [jsonData, setJsonData] = useState(null);
@@ -27,6 +28,14 @@ const NeoList = () => {
 
   if (loading) {
     return <Skeleton />;
+  }
+
+  if (!jsonData) {
+    return (
+      <Card>
+        <p>failed to retrieve neo list</p>
+      </Card>
+    );
   }
 
   console.log("jsonData: ", jsonData);

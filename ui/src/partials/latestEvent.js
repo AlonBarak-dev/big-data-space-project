@@ -4,6 +4,7 @@ import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 
 import MDBox from "../components/MDBox";
+import { Card } from "@mui/material";
 
 const LatestEvent = () => {
   const [jsonData, setJsonData] = useState(null);
@@ -28,6 +29,14 @@ const LatestEvent = () => {
 
   if (loading) {
     return <Skeleton />;
+  }
+
+  if (!jsonData) {
+    return (
+      <Card>
+        <p>Failed to retrieve latest event</p>
+      </Card>
+    );
   }
 
   const eventList = jsonData["events"];

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 
 import Skeleton from "react-loading-skeleton";
+import { Card } from "@mui/material";
 
 import MDBox from "../components/MDBox";
 
@@ -24,6 +25,14 @@ const SunForcastPartial = () => {
 
     fetchData();
   }, []);
+
+  if (!sunData) {
+    return (
+      <Card>
+        <p>failed to get sun forcast</p>
+      </Card>
+    );
+  }
 
   if (loading) {
     return <Skeleton />;

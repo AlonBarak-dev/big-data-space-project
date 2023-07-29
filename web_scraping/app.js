@@ -457,6 +457,6 @@ async function insertDataToMongoMany(db_name, collecetionName, data){
 	}
 }
 
-setInterval(updateSunData, 60_000);
-setInterval(scrapNeos, 1000);
-setInterval(updateSunDataMongo, 60_000);
+// setInterval(updateSunData, 60_000);
+// setInterval(scrapNeos, 60_000 * 60);
+// setInterval(updateSunDataMongo, 60_000);

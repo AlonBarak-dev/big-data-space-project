@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Skeleton from "react-loading-skeleton";
 
 import DataTable from "examples/Tables/DataTable";
+import { Card } from "@mui/material";
 
 const EventListView = () => {
   const [jsonData, setJsonData] = useState(null);
@@ -27,6 +28,14 @@ const EventListView = () => {
 
   if (loading) {
     return <Skeleton />;
+  }
+
+  if (!jsonData) {
+    return (
+      <Card>
+        <p>failed to get event list</p>
+      </Card>
+    );
   }
 
   const eventList = jsonData["events"];
