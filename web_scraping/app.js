@@ -63,6 +63,7 @@ const scrapNeos = () => {
 			for (var key in result) {
 				insertDataToElastic("neos", result[key]);
 			}
+
 			console.log("Neos stored in databases.");
 		})
 		.catch((error) => {
@@ -339,20 +340,40 @@ const updateSunDataMongo = () => {
 	.then((data) => {
 		const solar_flare_data = data.solar_flare_data;
 		for (let entry in solar_flare_data) {
-			insertDataToMongo("solar_flares", solar_flare_data[entry]);
+			const flareEntryDate = new Date(solar_flare_data[entry][0]).toISOString();
+			const flareEntryValue = solar_flare_data[entry][1];
+			insertDataToMongo("solar_flares", {date: flareEntryDate, value: flareEntryValue});
 		}
 
+		const currentDate = Date.now();
 		const nSunSpots = data.number_of_sun_spots;
-		const nSunSpotsEntry = {date: Date.now(), value: nSunSpots};
+		const nSunSpotsEntry = {date: currentDate, value: nSunSpots};
 		insertDataToMongo("n_sunspots", nSunSpotsEntry);
 
 		const sunspotsImageData = data.images.sunspots;
 		const solarFlaresImageData = data.images.solar_falres;
-		const sunspotsEntry = {date: Date.now(), value: sunspotsImageData}
-		const solarFlareEntry = {date: Date.now(), value: solarFlaresImageData}
+		const sunspotsEntry = {date: currentDate, value: sunspotsImageData}
+		const solarFlareEntry = {date: currentDate, value: solarFlaresImageData}
 		
 		insertDataToMongo("sunspot_images", sunspotsEntry);
 		insertDataToMongo("solar_flare_images", solarFlareEntry);
+		
+		for (let entryKey in data.cmes_list) {
+			insertDataToMongo("cmes", data.cmes_list[entryKey]);
+		}
+
+		for (let regionKey in data.sunspot_regions) {
+			const entry = {date: currentDate};
+			for (let key in data.sunspot_regions[regionKey]) {
+				entry[key] = data.sunspot_regions[regionKey][key];
+			}
+			insertDataToMongo("sunspot_regions", entry);
+		}
+
+		const forcastStringEntry = {date: currentDate, value: data.sun_forcast_string};
+		insertDataToMongo("sun_frocast", forcastStringEntry);	
+
+		console.log("Mongo update done!");
 	});
 };
 
