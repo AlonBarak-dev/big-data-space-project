@@ -130,6 +130,29 @@ app.get('/countByUrgency', async (req, res) => {
   }
 });
 
+app.get("/get_neos_24_hours", async (req, res) => {
+
+  try{
+    const neos_24 = await searchDocumentsWithinNext24Hours()
+    res.json({"neos":neos_24})
+  } catch (error){
+    console.error('Error while searching NEOs:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+})
+
+
+app.get("/get_neos_last_month", async (req, res) => {
+
+  try{
+    const neos_last_month = await searchDocumentsWithinLastMonth()
+    res.json({"neos":neos_last_month})
+  } catch (error){
+    console.error('Error while searching NEOs:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+})
+
 
 async function searchDocuments(indexName, query) {
   const response = await client.search({
@@ -169,8 +192,8 @@ async function searchEventsInRange(from, to) {
         query: {
           range: {
             date_search: {
-              gte: from, // Greater than or equal to "2023-07-26 00:00:00.000000"
-              lte: to, // Less than or equal to "2023-07-28 23:59:59.999999"
+              gte: from, // Greater than or equal to 
+              lte: to, // Less than or equal to 
             },
           }
         }
@@ -204,13 +227,11 @@ async function searchDocumentsWithinNext24Hours() {
     });
 
     const documents = response.hits.hits.map((hit) => hit._source);
-    console.log(documents);
+    return documents
   } catch (error) {
     console.error('Error while searching documents:', error);
   }
 }
-
-// searchDocumentsWithinNext24Hours()
 
 async function searchDocumentsWithinLastMonth() {
   try {
@@ -218,7 +239,7 @@ async function searchDocumentsWithinLastMonth() {
     const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
     const response = await client.search({
-      index: 'your_index_name', // Replace with your index name
+      index: neoIndexName, // Replace with your index name
       body: {
         query: {
           range: {
@@ -231,8 +252,8 @@ async function searchDocumentsWithinLastMonth() {
       },
     });
 
-    const documents = response.body.hits.hits.map((hit) => hit._source);
-    console.log(documents);
+    const documents = response.hits.hits.map((hit) => hit._source);
+    return documents
   } catch (error) {
     console.error('Error while searching documents:', error);
   }
