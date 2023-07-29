@@ -5,6 +5,7 @@ const Redis = require("ioredis");
 const { Client } = require('@elastic/elasticsearch'); // elastic search
 const { MongoClient } = require('mongodb');
 
+
 const KEY = "DdYnXnHGhGOgBhdoKoIvo5IyprK7EKfqiZtmKrjo";
 
 const app = express();
@@ -160,48 +161,164 @@ const getVisualSunData = async () => {
 	}; 
 };
 
-const getSunDataForMongo = async() => {
+const getSunDataForMongo = () => {
 	const userAgentString = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36'" 
 	try {
-		// get flare data
 		const referer = "https://www.spaceweatherlive.com/en/solar-activity/solar-flares.html";
-		var config = {
+		const config = {
 			headers: {
 				'User-Agent': userAgentString,
 				'Referer': referer
 			}
 		};
 
-		const solarFlaresUrl = "https://www.spaceweatherlive.com/includes/live-data.php?object=solar_flare_3d&lang=EN"
-		var response = await axios.get(solarFlaresUrl, config);
-		var $ = cheerio.load(response.data.val);
+		const solarFlareData = getFlareData(config);
 
-		const currentSolarFlareValue = $("div.Cclass").text();
-		const solarFlareClass = currentSolarFlareValue[0];
-		const solarFlareValue = parseFloat(currentSolarFlareValue.slice(1)); 
-		
-		// get sunspots data
-		config = {
+		const shortConfig = {
 			headers: {
 				'User-Agent': userAgentString,
 			}
 		};
 
-		const sunspotsUrl = "https://www.spaceweatherlive.com/en/solar-activity.html"
-		response = await axios.get(sunspotsUrl, config);
-		$ = cheerio.load(response.data);
-		const numberOfSunSpots = $("table.mb-0:nth-child(3) > tbody:nth-child(1) > tr:nth-child(1) > td:nth-child(2) > span:nth-child(1)").text();
+		const nSunSpots = getNumberOfSunSpots(shortConfig);
+		const cmesList = getCmesList(shortConfig);
+		const images = getImageUrls();	
+		const sunspotRegionList = getSunspotRegions(shortConfig);
+		const forcastText = getSunForcastString(config);
 
-		const result = {
-			solar_flare_class: solarFlareClass,
-			solar_flare_value: solarFlareValue,
-			number_of_sun_spots: parseInt(numberOfSunSpots)
-		};
-		console.log("Result: ", result);
+		const promises = [solarFlareData, nSunSpots, cmesList, sunspotRegionList, forcastText];
+		Promise.all(promises).then((values) => {;
+			// construct result
+			const result = {
+				solar_flare_data: values[0],
+				number_of_sun_spots: values[1],
+				cmes_list: values[2],
+				image_urls: images,
+				sunspot_regions: values[3],
+				sun_forcast_string: values[4],
+			};
+			console.log("Result: ", result);
+		});
 	} catch (error) {
 		console.error("Error fetching data: ", error);
 	}
 }
+
+const getFlareData = async(config) => {
+	const solarFlaresUrl = "https://www.spaceweatherlive.com/includes/live-data.php?object=solar_flare_3d&lang=EN"
+	const response = await axios.get(solarFlaresUrl, config);
+	const $ = cheerio.load(response.data.val);
+
+	const currentSolarFlareValue = $("div.Cclass").text();
+	const solarFlareClass = currentSolarFlareValue[0];
+	const solarFlareValue = parseFloat(currentSolarFlareValue.slice(1)); 
+
+	const tableData = response.data[0]["data"];
+	const flareEventsList = []; 
+	for (var entry in tableData) {
+		flareEventsList.push({
+			date: tableData[entry][0],
+			value: tableData[entry][1]
+		});
+	}
+	
+	const result = {
+		solar_flare_class: solarFlareClass,
+		solar_flare_value: solarFlareValue,
+		solar_flare_events: flareEventsList,
+	}
+
+	return result;
+};
+
+const getCmesList = async(config) => {
+	// get cmes list
+	const cmesUrl = "https://www.spaceweatherlive.com/en/solar-activity/latest-cmes.html";
+	const response = await axios.get(cmesUrl, config);
+	const $ = cheerio.load(response.data);
+	const cmesTableData = $("table.text-center > tbody:nth-child(2)").children();
+	const nRows = cmesTableData.length;
+	var fields = ["CME #", "Onset time", "Duration", "Angle", "Angular width", "Medain", "Varitaion", "Min", "Max", "Halo?"];
+	const cmesListResult = [];
+	console.log("number of rows: ", nRows);
+
+	for (let i = 0; i < nRows; i++) {
+		const rowData = $(`table.text-center > tbody:nth-child(2) > tr:nth-child(${i + 1})`).children();
+		const rowLength = rowData.length - 3; // -3 because i want to ignore the last three columns
+		const cmesEntry = {};
+		for (let j = 0; j < rowLength; j++) { 
+			const cellData = $(`table.text-center > tbody:nth-child(2) > tr:nth-child(${i + 1}) > td:nth-child(${j + 1})`).text();
+			cmesEntry[fields[j]] = cellData;
+		}
+		cmesListResult.push(cmesEntry);
+	}
+	
+	return cmesListResult;
+};
+
+const getSunspotRegions = async(config) => {
+	// get sunspot regions
+	const sunspotRegionsUrl = "https://www.spaceweatherlive.com/en/solar-activity/sunspot-regions.html";
+	const response = await axios.get(sunspotRegionsUrl, config);
+	const $ = cheerio.load(response.data);
+	const regionsTableData = $("div.row:nth-child(10) > div:nth-child(2) > div:nth-child(1) > table:nth-child(2) > tbody:nth-child(2)").children();
+	const nEntries = regionsTableData.length;
+	fields = ["Region", "Number of Sunspots", "Class Magnitude", "Class Spot"];
+	const sunspotRegionList = [];
+	for (let i = 0; i < nEntries; i++) {
+		let entry = $(`div.row:nth-child(10) > div:nth-child(2) > div:nth-child(1) > table:nth-child(2) > tbody:nth-child(2) > tr:nth-child(${i + 1})`).children();
+
+		const regionEntry = {}
+		for (let j = 0; j < entry.length; j++) {
+			var data;
+			if (j == 2) {
+				data = $(`div.row:nth-child(10) > div:nth-child(2) > div:nth-child(1) > table:nth-child(2) > tbody:nth-child(2) > tr:nth-child(${i + 1}) > td:nth-child(${j + 1}) > i:nth-child(1)`).attr("class");
+
+				data = data === "region_mag A" ? "A" : "B"; 
+			} else {
+				data = $(`div.row:nth-child(10) > div:nth-child(2) > div:nth-child(1) > table:nth-child(2) > tbody:nth-child(2) > tr:nth-child(${i + 1}) > td:nth-child(${j + 1})`).text();
+			}
+
+			regionEntry[fields[j]] = data;
+		}
+
+		sunspotRegionList.push(regionEntry);
+	}
+
+	return sunspotRegionList; 
+}; 
+
+const getImageUrls = () => {
+	const sunspotsImageUrl = "https://www.spaceweatherlive.com/images/SDO/SDO_HMIIF_512.jpg";
+	const coronalHolesImageUrl = "https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0193.jpg";
+	const solarFlaresImageUrl = "https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0131.jpg";
+	const images = {
+		sunspots: sunspotsImageUrl,
+		coronal_holes: coronalHolesImageUrl,
+		solar_falres: solarFlaresImageUrl,
+	};
+
+	return images;
+};
+
+const getNumberOfSunSpots = async(config) => {
+	const sunspotsUrl = "https://www.spaceweatherlive.com/en/solar-activity.html";
+	const response = await axios.get(sunspotsUrl, config);
+	const $ = cheerio.load(response.data);
+	const nSunSpots = $("table.mb-0:nth-child(3) > tbody:nth-child(1) > tr:nth-child(1) > td:nth-child(2) > span:nth-child(1)").text();
+
+	return parseInt(nSunSpots);
+};
+
+const getSunForcastString = async(config) => {
+	const url = "https://www.spaceweatherlive.com/en/reports/forecast-discussion.html";
+	const response = await axios.get(url, config);
+	const $ = cheerio.load(response.data);
+	const fullText = $(".col-md-8").text();
+	const lines = fullText.split("\n");
+
+	return lines.slice(39, 41).join(); 
+}; 
 
 const updateSunData = () => {
 	console.log("Updating sun data");
