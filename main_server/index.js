@@ -184,6 +184,61 @@ async function searchEventsInRange(from, to) {
 }
 
 
+async function searchDocumentsWithinNext24Hours() {
+  try {
+    const now = new Date();
+    const twentyFourHoursLater = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString();
+    // console.log(now.toISOString(), twentyFourHoursLater)
+    const response = await client.search({
+      index: neoIndexName, // Replace with your index name
+      body: {
+        query: {
+          range: {
+            approach_date: {
+              gte: now.toISOString(),
+              lte: twentyFourHoursLater,
+            },
+          },
+        },
+      },
+    });
+
+    const documents = response.hits.hits.map((hit) => hit._source);
+    console.log(documents);
+  } catch (error) {
+    console.error('Error while searching documents:', error);
+  }
+}
+
+// searchDocumentsWithinNext24Hours()
+
+async function searchDocumentsWithinLastMonth() {
+  try {
+    const now = new Date();
+    const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+    const response = await client.search({
+      index: 'your_index_name', // Replace with your index name
+      body: {
+        query: {
+          range: {
+            date: {
+              gte: oneMonthAgo,
+              lte: now.toISOString(),
+            },
+          },
+        },
+      },
+    });
+
+    const documents = response.body.hits.hits.map((hit) => hit._source);
+    console.log(documents);
+  } catch (error) {
+    console.error('Error while searching documents:', error);
+  }
+}
+
+
 // Neos using Redis (Cache) & Elastic/MongoDB ((Disk)
 
 app.get("/get_neos_from_db", async (req, res) => {
