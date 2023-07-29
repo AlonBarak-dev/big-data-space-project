@@ -92,7 +92,7 @@ const processNEOResponse = function (res) {
 				is_potentially_hazardous: neo["is_potentially_hazardous_asteroid"]
 				? "Yes"
 				: "No",
-				approach_date: convertDateFormat(close_approach_data["close_approach_date_full"]),
+				approach_date: convertToISO8601(close_approach_data["close_approach_date_full"]),
 				magnitude: neo["absolute_magnitude_h"],
 				estimated_min_diameter_size_meters: neo["estimated_diameter"]["meters"]["estimated_diameter_min"],
 				estimated_max_diameter_size_meters: neo["estimated_diameter"]["meters"]["estimated_diameter_max"],
@@ -113,6 +113,20 @@ function formatDate(date) {
 	const day = String(date.getDate()).padStart(2, "0");
 
 	return `${year}-${month}-${day}`;
+}
+
+function convertToISO8601(dateString) {
+  const dateObj = new Date(dateString);
+
+  const year = dateObj.getUTCFullYear();
+  const month = String(dateObj.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(dateObj.getUTCDate()).padStart(2, "0");
+  const hours = String(dateObj.getUTCHours()).padStart(2, "0");
+  const minutes = String(dateObj.getUTCMinutes()).padStart(2, "0");
+  const seconds = String(dateObj.getUTCSeconds()).padStart(2, "0");
+
+  const formattedDate = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}Z`;
+  return formattedDate;
 }
 
 function convertDateFormat(dateString) {
@@ -444,5 +458,5 @@ async function insertDataToMongoMany(db_name, collecetionName, data){
 }
 
 setInterval(updateSunData, 60_000);
-setInterval(scrapNeos, 60_000);
+setInterval(scrapNeos, 1000);
 setInterval(updateSunDataMongo, 60_000);
