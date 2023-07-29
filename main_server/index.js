@@ -142,10 +142,10 @@ app.get("/get_neos_24_hours", async (req, res) => {
 })
 
 
-app.get("/get_neos_last_month", async (req, res) => {
+app.get("/get_neos_last_month_by_diameter", async (req, res) => {
 
   try{
-    const neos_last_month = await searchDocumentsWithinLastMonth()
+    const neos_last_month = await calculateEstimatedDiametersAndDistribution()
     res.json({"neos":neos_last_month})
   } catch (error){
     console.error('Error while searching NEOs:', error);
@@ -187,7 +187,7 @@ async function getAllEntries(indexName) {
 async function searchEventsInRange(from, to) {
   try {
     const response = await client.search({
-      index: simIndexName, // Replace with your index name
+      index: simIndexName, 
       body: {
         query: {
           range: {
@@ -213,7 +213,7 @@ async function searchDocumentsWithinNext24Hours() {
     const twentyFourHoursLater = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString();
     // console.log(now.toISOString(), twentyFourHoursLater)
     const response = await client.search({
-      index: neoIndexName, // Replace with your index name
+      index: neoIndexName, 
       body: {
         query: {
           range: {
@@ -237,13 +237,14 @@ async function searchDocumentsWithinLastMonth() {
   try {
     const now = new Date();
     const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
-
+    console.log(now.toISOString(), oneMonthAgo)
     const response = await client.search({
-      index: neoIndexName, // Replace with your index name
+      index: neoIndexName, 
+      size:10000,
       body: {
         query: {
           range: {
-            date: {
+            approach_date: {
               gte: oneMonthAgo,
               lte: now.toISOString(),
             },
@@ -256,6 +257,42 @@ async function searchDocumentsWithinLastMonth() {
     return documents
   } catch (error) {
     console.error('Error while searching documents:', error);
+  }
+}
+
+async function calculateEstimatedDiametersAndDistribution() {
+  try {
+    const response = await searchDocumentsWithinLastMonth()
+
+    // Calculate the estimated diameter and store them in an array
+    const estimatedDiameters = response.map((hit) => {
+      const maxDiameter = hit.estimated_max_diameter_size_meters;
+      const minDiameter = hit.estimated_min_diameter_size_meters;
+      return (maxDiameter + minDiameter) / 2;
+    });
+
+
+    // Round the estimated diameters and distribute them into 100m ranges
+    const distribution = {};
+    estimatedDiameters.forEach((estimatedDiameter) => {
+      const rangeStart = Math.floor(estimatedDiameter / 100) * 100;
+      const rangeKey = `${rangeStart}-${rangeStart + 100}`;
+      distribution[rangeKey] = (distribution[rangeKey] || 0) + 1;
+    });
+
+    // If you want to get the maximum estimated diameter, you can do it here
+    const maxEstimatedDiameter = Math.max(...estimatedDiameters);
+
+    // Combine the distribution with the maxEstimatedDiameter in the final JSON
+    const result = {
+      ...distribution,
+      max_estimated_diameter: maxEstimatedDiameter,
+    };
+    
+    console.log(result);
+    return result
+  } catch (error) {
+    console.error('Error while processing documents:', error);
   }
 }
 
