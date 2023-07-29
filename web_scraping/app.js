@@ -163,41 +163,49 @@ const getVisualSunData = async () => {
 
 const getSunDataForMongo = () => {
 	const userAgentString = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36'" 
+	const referer = "https://www.spaceweatherlive.com/en/solar-activity/solar-flares.html";
+	const config = {
+		headers: {
+			'User-Agent': userAgentString,
+			'Referer': referer
+		}
+	};
+
+	const shortConfig = {
+		headers: {
+			'User-Agent': userAgentString,
+		}
+	};
+
+	const imagesConfig = {
+		headers: {
+			'User-Agent': userAgentString,
+		},
+		responseType: "arraybuffer"
+	};
+
 	try {
-		const referer = "https://www.spaceweatherlive.com/en/solar-activity/solar-flares.html";
-		const config = {
-			headers: {
-				'User-Agent': userAgentString,
-				'Referer': referer
-			}
-		};
-
 		const solarFlareData = getFlareData(config);
-
-		const shortConfig = {
-			headers: {
-				'User-Agent': userAgentString,
-			}
-		};
-
 		const nSunSpots = getNumberOfSunSpots(shortConfig);
 		const cmesList = getCmesList(shortConfig);
-		const images = getImageUrls();	
+		const images = getImageUrls(imagesConfig);	
 		const sunspotRegionList = getSunspotRegions(shortConfig);
 		const forcastText = getSunForcastString(config);
 
-		const promises = [solarFlareData, nSunSpots, cmesList, sunspotRegionList, forcastText];
-		Promise.all(promises).then((values) => {;
+		const promises = [solarFlareData, nSunSpots, images, cmesList, sunspotRegionList, forcastText];
+		return Promise.all(promises).then((values) => {;
 			// construct result
 			const result = {
 				solar_flare_data: values[0],
 				number_of_sun_spots: values[1],
-				cmes_list: values[2],
-				image_urls: images,
-				sunspot_regions: values[3],
-				sun_forcast_string: values[4],
+				images: values[2],
+				cmes_list: values[3],
+				sunspot_regions: values[4],
+				sun_forcast_string: values[5],
 			};
-			console.log("Result: ", result);
+			
+			console.log("Scraping success!");
+			return result;
 		});
 	} catch (error) {
 		console.error("Error fetching data: ", error);
@@ -207,11 +215,6 @@ const getSunDataForMongo = () => {
 const getFlareData = async(config) => {
 	const solarFlaresUrl = "https://www.spaceweatherlive.com/includes/live-data.php?object=solar_flare_3d&lang=EN"
 	const response = await axios.get(solarFlaresUrl, config);
-	const $ = cheerio.load(response.data.val);
-
-	const currentSolarFlareValue = $("div.Cclass").text();
-	const solarFlareClass = currentSolarFlareValue[0];
-	const solarFlareValue = parseFloat(currentSolarFlareValue.slice(1)); 
 
 	const tableData = response.data[0]["data"];
 	const flareEventsList = []; 
@@ -222,13 +225,7 @@ const getFlareData = async(config) => {
 		});
 	}
 	
-	const result = {
-		solar_flare_class: solarFlareClass,
-		solar_flare_value: solarFlareValue,
-		solar_flare_events: flareEventsList,
-	}
-
-	return result;
+	return flareEventsList;
 };
 
 const getCmesList = async(config) => {
@@ -288,14 +285,19 @@ const getSunspotRegions = async(config) => {
 	return sunspotRegionList; 
 }; 
 
-const getImageUrls = () => {
+const getImageUrls = async(config) => {
 	const sunspotsImageUrl = "https://www.spaceweatherlive.com/images/SDO/SDO_HMIIF_512.jpg";
-	const coronalHolesImageUrl = "https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0193.jpg";
 	const solarFlaresImageUrl = "https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0131.jpg";
+	
+	const sunspotImageResponse = await axios.get(sunspotsImageUrl, config);
+	const sunspotImageData = sunspotImageResponse.data;
+
+	const solarFlareResponse = await axios.get(solarFlaresImageUrl, config);
+	const solarFlareData = solarFlareResponse.data;
+
 	const images = {
-		sunspots: sunspotsImageUrl,
-		coronal_holes: coronalHolesImageUrl,
-		solar_falres: solarFlaresImageUrl,
+		sunspots: sunspotImageData,
+		solar_falres: solarFlareData,
 	};
 
 	return images;
@@ -332,6 +334,28 @@ const updateSunData = () => {
 		});
 };
 
+const updateSunDataMongo = () => {
+	getSunDataForMongo()
+	.then((data) => {
+		const solar_flare_data = data.solar_flare_data;
+		for (let entry in solar_flare_data) {
+			insertDataToMongo("solar_flares", solar_flare_data[entry]);
+		}
+
+		const nSunSpots = data.number_of_sun_spots;
+		const nSunSpotsEntry = {date: Date.now(), value: nSunSpots};
+		insertDataToMongo("n_sunspots", nSunSpotsEntry);
+
+		const sunspotsImageData = data.images.sunspots;
+		const solarFlaresImageData = data.images.solar_falres;
+		const sunspotsEntry = {date: Date.now(), value: sunspotsImageData}
+		const solarFlareEntry = {date: Date.now(), value: solarFlaresImageData}
+		
+		insertDataToMongo("sunspot_images", sunspotsEntry);
+		insertDataToMongo("solar_flare_images", solarFlareEntry);
+	});
+};
+
 async function insertDataToElastic(indexName, data) {
 	try {
 		const response = await client.index({
@@ -361,4 +385,4 @@ async function insertDataToMongo(collecetionName, data){
 
 setInterval(updateSunData, 60_000);
 setInterval(scrapNeos, 60_000);
-setInterval(getSunDataForMongo, 3000);
+setInterval(updateSunDataMongo, 3000);
