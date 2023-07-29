@@ -89,10 +89,11 @@ class astro_simulator:
         star_name = self.redis_db.hget(self.redis_key, star_idx)
         return star_name
     
-    def build_message(self, star_name,  date, notfac, loc, type, urg):
+    def build_message(self, star_name,  date, date_search,  notfac, loc, type, urg):
         message = {
             'star': star_name,
             'date': date,
+            'date_search': date_search,
             'notfac': notfac,
             'location': loc,
             'type': type,
@@ -104,13 +105,14 @@ class astro_simulator:
     def generate_data(self):
         
         date = str(datetime.now(timezone.utc))
+        date_search = str(datetime.today().date())
         notfac = self.list_of_telescopes[random.randrange(0, 11)]
         loc = self.generate_location()
         type = self.types[random.randrange(0, 5)]
         urg = random.randrange(1, 6)
         star_name = self.generate_star()
         
-        return self.build_message(star_name, date, notfac, loc, type, urg)
+        return self.build_message(star_name, date, date_search, notfac, loc, type, urg)
     
     def send_data_to_kafka_topic(self, data):
         """

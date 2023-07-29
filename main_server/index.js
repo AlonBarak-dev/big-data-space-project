@@ -4,6 +4,7 @@ const path = require('path');
 const bodyParser = require('body-parser');
 const { Client } = require('@elastic/elasticsearch'); // elastic search
 const Redis = require('ioredis');   // redis
+const { response } = require('express');
 
 const app = express();
 
@@ -13,7 +14,7 @@ const index = "events";
 app.use(bodyParser.json());
 app.use(express.static(__dirname + "/build"));
 
-const simIndexName = 'simulator_events'; // Elastic search - index name for simulator events
+const simIndexName = 'raw_simulator_events'; // Elastic search - index name for simulator events
 const neoIndexName = 'neos'
 
 // Create a new Elastic client instance
@@ -58,6 +59,19 @@ app.get("/get_event_list", async (req, res) => {
   console.log("done")
 });
 
+app.get("/get_event_list_date/:from/:to/:star_name", async (req, res) => {
+  const from = req.params.from
+  const to = req.params.to
+  const star_name = req.params.star_name
+
+  const events_in_range = await searchEventsInRange(from, to)
+  
+  const filtered_events_in_range = events_in_range.filter((event_in_range) => event_in_range.star == star_name)
+
+  res.json({events: filtered_events_in_range})
+  
+})
+
 
 async function searchDocuments(indexName, query) {
   const response = await client.search({
@@ -86,6 +100,29 @@ async function getAllEntries(indexName) {
     },
   });
   return response;
+}
+
+// Function to search for events in a YMD date range
+async function searchEventsInRange(from, to) {
+  try {
+    const response = await client.search({
+      index: simIndexName, // Replace with your index name
+      body: {
+        query: {
+          range: {
+            date_search: {
+              gte: from, // Greater than or equal to "2023-07-26 00:00:00.000000"
+              lte: to, // Less than or equal to "2023-07-28 23:59:59.999999"
+            },
+          }
+        }
+      }
+    });
+    const events = response.hits.hits.map((hit) => hit._source);
+    return events
+  } catch (error) {
+    console.error('Error while searching events:', error);
+  }
 }
 
 
