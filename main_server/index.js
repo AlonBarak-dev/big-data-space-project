@@ -4,18 +4,18 @@ const path = require('path');
 const bodyParser = require('body-parser');
 const { Client } = require('@elastic/elasticsearch'); // elastic search
 const Redis = require('ioredis');   // redis
-const { response } = require('express');
+// const { response } = require('express');
+const { MongoClient } = require('mongodb');
 
 const app = express();
-
 const port = 3000;
-const index = "events";
 
 app.use(bodyParser.json());
 app.use(express.static(__dirname + "/build"));
 
 const simIndexName = 'raw_simulator_events'; // Elastic search - index name for simulator events
 const neoIndexName = 'neos'
+const url = 'mongodb+srv://big-data-space:Aa123456@big-data-space.wlxmqwy.mongodb.net/?retryWrites=true&w=majority' // MongoDB 
 
 // Create a new Elastic client instance
 const client = new Client({
@@ -31,6 +31,9 @@ const redis = new Redis({
   host: '35.234.119.103', // Redis server host
   port: 6379,        // Redis server port
 });
+
+// Create a new MongoDB instnace 
+const mongoClient = new MongoClient(url)
 
 
 // Serve static files from the React build directory
@@ -162,6 +165,13 @@ app.get("/get_neos_last_month_by_diameter", async (req, res) => {
   }
 })
 
+app.get("/get_solar_flares/:interval", async (req, res) => {
+  const interval = req.params.interval
+
+  const result = await extractSolarFlaresWithinLastXHours(interval)
+  res.json({solar:result})
+})
+
 
 async function searchDocuments(indexName, query) {
   const response = await client.search({
@@ -197,6 +207,7 @@ async function searchEventsInRange(from, to) {
   try {
     const response = await client.search({
       index: simIndexName, 
+      size: 10000,
       body: {
         query: {
           range: {
@@ -223,6 +234,7 @@ async function searchDocumentsWithinNext24Hours() {
     // console.log(now.toISOString(), twentyFourHoursLater)
     const response = await client.search({
       index: neoIndexName, 
+      size: 10000,
       body: {
         query: {
           range: {
@@ -304,6 +316,43 @@ async function calculateEstimatedDiametersAndDistribution() {
     console.error('Error while processing documents:', error);
   }
 }
+
+async function extractSolarFlaresWithinLastXHours(interval) {
+  
+  const dbName = 'big-data'; 
+  const collectionName = 'solar_flares'; 
+
+  try {
+    await mongoClient.connect();
+    const db = mongoClient.db(dbName);
+    const collection = db.collection(collectionName);
+
+    // Calculate timestamps for the current time and 2 hours ago
+    const currentTime = new Date();
+    const twoHoursAgo = new Date(currentTime.getTime() - interval * 60 * 60 * 1000);
+
+    console.log(twoHoursAgo.getTime(), currentTime.getTime())
+
+    // Query to retrieve documents within the specified timestamp range
+    const query = {
+      date: {
+        $gte: twoHoursAgo.getTime(), // Greater than or equal to 2 hours ago
+        $lte: currentTime.getTime(), // Less than or equal to the current time
+      },
+    };
+
+    // Fetch the documents that match the query
+    const result = await collection.find(query).toArray();
+
+    return result
+  } catch (error) {
+    console.error('Error while extracting documents:', error);
+  } finally {
+    // Close the MongoDB connection after querying
+    await client.close();
+  }
+}
+
 
 
 // Neos using Redis (Cache) & Elastic/MongoDB ((Disk)
