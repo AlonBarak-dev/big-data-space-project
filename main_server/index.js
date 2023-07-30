@@ -331,8 +331,6 @@ async function extractSolarFlaresWithinLastXHours(interval) {
     const currentTime = new Date();
     const twoHoursAgo = new Date(currentTime.getTime() - interval * 60 * 60 * 1000);
 
-    console.log(twoHoursAgo.getTime(), currentTime.getTime())
-
     // Query to retrieve documents within the specified timestamp range
     const query = {
       date: {
@@ -343,7 +341,6 @@ async function extractSolarFlaresWithinLastXHours(interval) {
 
     // Fetch the documents that match the query
     const result = await collection.find(query).toArray();
-
     return result
   } catch (error) {
     console.error('Error while extracting documents:', error);
@@ -352,7 +349,6 @@ async function extractSolarFlaresWithinLastXHours(interval) {
     await client.close();
   }
 }
-
 
 
 // Neos using Redis (Cache) & Elastic/MongoDB ((Disk)
