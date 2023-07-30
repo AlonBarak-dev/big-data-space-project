@@ -1,50 +1,24 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 
-import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 
 import MDBox from "../components/MDBox";
 import { Card } from "@mui/material";
 
-const LatestEvent = () => {
-  const [jsonData, setJsonData] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch("/get_event_list");
-        const data = await response.json();
-        setJsonData(data);
-
-        setLoading(false);
-      } catch (error) {
-        console.error("Error retrieving JSON data:", error);
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  if (loading) {
-    return <Skeleton />;
-  }
-
-  if (!jsonData) {
+const LatestEvent = (lastEvent) => {
+  lastEvent = lastEvent.lastEvent;
+  if (!lastEvent) {
     return (
       <Card>
-        <MDBox px={3} py={3}>
-          <p>Failed to load latest event</p>
+        <MDBox>
+          <p>No event!</p>
         </MDBox>
       </Card>
     );
   }
 
-  const eventList = jsonData["events"];
-  const lastEvent = eventList[eventList.length - 1];
-
-  var bgColor = lastEvent["urgancy"] >= 4 ? "red" : "info";
+  console.log(lastEvent);
+  var bgColor = lastEvent["urg"] >= 4 ? "red" : "info";
 
   return (
     <MDBox mb={1.5} py={3} px={1.5} color={"white"} bgColor={bgColor} borderRadius={10}>

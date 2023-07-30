@@ -41,8 +41,6 @@ const NeoList = () => {
     );
   }
 
-  console.log("jsonData: ", jsonData);
-
   if (jsonData.length <= 0) {
     return <p>No Neos Found!</p>;
   }
