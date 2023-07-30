@@ -29,7 +29,9 @@ const SunForcastPartial = () => {
   if (!sunData) {
     return (
       <Card>
-        <p>failed to get sun forcast</p>
+        <MDBox px={3} py={3}>
+          <p>Failed to load sun forcast</p>
+        </MDBox>
       </Card>
     );
   }

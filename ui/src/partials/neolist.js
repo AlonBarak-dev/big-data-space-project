@@ -4,6 +4,7 @@ import Skeleton from "react-loading-skeleton";
 
 import DataTable from "examples/Tables/DataTable";
 import { Card } from "@mui/material";
+import MDBox from "components/MDBox";
 
 const NeoList = () => {
   const [jsonData, setJsonData] = useState(null);
@@ -33,7 +34,9 @@ const NeoList = () => {
   if (!jsonData) {
     return (
       <Card>
-        <p>failed to retrieve neo list</p>
+        <MDBox px={3} py={3}>
+          <p>Failed to load neo list</p>
+        </MDBox>
       </Card>
     );
   }

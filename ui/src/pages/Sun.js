@@ -30,6 +30,18 @@ const SunForcast = () => {
     fetchData();
   }, []);
 
+  if (!jsonData) {
+    return (
+      <DashboardLayout>
+        <Card>
+          <MDBox px={3} py={3}>
+            <p>Failed to load sun forcast</p>
+          </MDBox>
+        </Card>
+      </DashboardLayout>
+    );
+  }
+
   if (loading) {
     return (
       <DashboardLayout>

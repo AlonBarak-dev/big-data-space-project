@@ -34,7 +34,9 @@ const LatestEvent = () => {
   if (!jsonData) {
     return (
       <Card>
-        <p>Failed to retrieve latest event</p>
+        <MDBox px={3} py={3}>
+          <p>Failed to load latest event</p>
+        </MDBox>
       </Card>
     );
   }
