@@ -26,7 +26,8 @@ class astro_simulator:
         # load Redis
         self.redis_db = self.load_redis()
         self.redis_key = "Bright_star_catalog"
-        if not self.redis_db.exists(self.redis_key):        
+        if not self.redis_db.exists(self.redis_key):
+            print("Saving catalog")
             self.load_catalog_to_redis()
         self.catalog_len = self.redis_db.hlen("Bright_star_catalog")
         
@@ -41,7 +42,7 @@ class astro_simulator:
             print("Redis - Failed")
             return None
     
-    def load_catalog_to_redis(self, file_path="simulator/BSC.json"):
+    def load_catalog_to_redis(self, file_path="BSC.json"):
         file = open(file_path, "r")
         catalog_list = json.load(file)
         names_catalog = {}
@@ -156,12 +157,12 @@ class astro_simulator:
         
 
 if __name__ == "__main__":
-    sim = astro_simulator(btstrap_servers='35.234.119.103:9092', kf_topic='raw_simulator_events')
     print("Generating Events!")
     while True:
+        sim = astro_simulator(btstrap_servers='35.234.119.103:9092', kf_topic='raw_simulator_events')
         message = sim.generate_data()
         print(message)
         sim.send_data_to_kafka_topic(message)
-        time.sleep(60*5)
+        time.sleep(10)
     print("Done Generating Events!")
 
