@@ -26,7 +26,8 @@ class astro_simulator:
         # load Redis
         self.redis_db = self.load_redis()
         self.redis_key = "Bright_star_catalog"
-        # self.load_catalog_to_redis()
+        if not self.redis_db.exists(self.redis_key):        
+            self.load_catalog_to_redis()
         self.catalog_len = self.redis_db.hlen("Bright_star_catalog")
         
     def load_redis(self):
@@ -48,9 +49,10 @@ class astro_simulator:
             name = item["Title HD"]
             names_catalog[str(idx)] = name
         
-        for k, v in names_catalog.items():
+        for idx, (k, v) in enumerate(names_catalog.items()):
+            if idx == 500:
+                break
             self.redis_db.hset(self.redis_key, k, v)
-            
             
         print("Catalog Saved successfully in Redis!")
         
@@ -150,20 +152,16 @@ class astro_simulator:
         except Exception as e:
             print(f"Failed to send data to Kafka: {e}")
             return False
-
-        # finally:
-        #     # Close the producer to release its resources
-        #     # producer.close()
         
         
 
 if __name__ == "__main__":
     sim = astro_simulator(btstrap_servers='35.234.119.103:9092', kf_topic='raw_simulator_events')
     print("Generating Events!")
-    for i in range(10):
+    while True:
         message = sim.generate_data()
         print(message)
         sim.send_data_to_kafka_topic(message)
-        time.sleep(2)
+        time.sleep(60*5)
     print("Done Generating Events!")
 
