@@ -470,4 +470,4 @@ functions.http('sun_scraper', async (req, res) => {
 
 // setInterval(updateSunData, 60_000);
 // setInterval(scrapNeos, 60_000 * 60);
-// setInterval(updateSunDataMongo, 60_000);
+// setInterval(updateSunDataMongo, 3000);

@@ -1,20 +1,28 @@
 import { useState, useEffect } from "react";
 
 import Skeleton from "react-loading-skeleton";
-import { Card } from "@mui/material";
+import { Card, Grid } from "@mui/material";
 
 import MDBox from "../components/MDBox";
+import { json } from "react-router-dom";
+import ReportsLineChart from "examples/Charts/LineCharts/ReportsLineChart";
 
 const SunForcastPartial = () => {
-  const [sunData, setSunData] = useState(null);
+  const [sunspotImageData, setSunspotImageData] = useState(null);
+  const [sunActivity, setSunActivity] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const sun_response = await fetch("/sun");
-        const sun_data = await sun_response.json();
-        setSunData(sun_data);
+        const sunspotImageResponse = await fetch("/get_sun_image");
+        const sunActivityResponse = await fetch("/get_solar_flares/2");
+
+        const sunspotImage = await sunspotImageResponse.json();
+        const sunActivity = await sunActivityResponse.json();
+
+        setSunspotImageData(sunspotImage.image.value);
+        setSunActivity(sunActivity.solar);
 
         setLoading(false);
       } catch (error) {
@@ -26,35 +34,53 @@ const SunForcastPartial = () => {
     fetchData();
   }, []);
 
-  if (!sunData) {
-    return (
-      <Card>
-        <MDBox px={3} py={3}>
-          <p>Failed to load sun forcast</p>
-        </MDBox>
-      </Card>
-    );
-  }
-
   if (loading) {
     return <Skeleton />;
   }
 
+  const preparedSunActivityData = convertSunActivityFormat(sunActivity);
+  console.log("Sun Activity: ", preparedSunActivityData);
+  console.log("Sunspot image data: ", sunspotImageData);
   return (
-    <MDBox mb={1.5} py={2.5} px={1.5} color={"white"} bgColor={"green"} borderRadius={10}>
-      <h3>Details</h3>
-      {sunData ? (
-        <p>
-          Right Ascension: {sunData["rightAscension"]} <br />
-          Declination: {sunData["declination"]} <br />
-          Constellation: {sunData["constellation"]} <br />
-          Magnitude: {sunData["magnitude"]} <br />
-        </p>
-      ) : (
-        <p>Failed to get sun Details</p>
-      )}
+    <MDBox mt={3}>
+      <Grid container spacing={3}>
+        <Grid item>
+          <h2>Current Sun State</h2>
+          <img src={`data:image/jpeg;base64,${sunspotImageData}`} alt="Sunspot Image" />
+        </Grid>
+        <Grid item mt={8} lg={4}>
+          <ReportsLineChart
+            color="info"
+            title="Sun Activity"
+            description="Sun activity in the last 2 Hours"
+            chart={preparedSunActivityData}
+            date=""
+          />
+        </Grid>
+      </Grid>
     </MDBox>
   );
 };
+
+function convertSunActivityFormat(sunActivity) {
+  const values = [];
+  const labels = [];
+  for (let idx in sunActivity) {
+    labels.push(formatMillisecondsToHoursMinutes(sunActivity[idx]["date"]));
+    values.push(sunActivity[idx]["value"]);
+  }
+
+  return {
+    labels: labels,
+    datasets: { label: "Sun Activity", data: values },
+  };
+}
+
+function formatMillisecondsToHoursMinutes(milliseconds) {
+  const date = new Date(milliseconds);
+  const hours = date.getUTCHours().toString().padStart(2, "0");
+  const minutes = date.getUTCMinutes().toString().padStart(2, "0");
+  return `${hours}:${minutes}`;
+}
 
 export default SunForcastPartial;
