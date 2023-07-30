@@ -1,0 +1,17 @@
+{
+  "name": "elastic-simulator-sink",
+  "config": {
+    "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
+    "tasks.max": "1",
+    "topics": "raw_simulator_events",
+    "connection.url": "http://35.234.119.103:9200",
+    "connection.username": "elastic",
+    "connection.password": "changeme",
+    "type.name": "_doc",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false",
+    "schema.ignore": "true",
+    "key.ignore": "true",
+    "name": "elastic-simulator-sink"
+  }
+}
