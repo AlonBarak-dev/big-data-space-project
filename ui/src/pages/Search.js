@@ -221,7 +221,7 @@ function getUrlByFilters(startDate, endDate, type, notfac, star) {
     url += `notfac=${notfac}&`;
   }
   if (star) {
-    url += `star=${star}&`;
+    url += `star=${star}`;
   }
 
   return url;
