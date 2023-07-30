@@ -37,8 +37,8 @@ const AnalyticsPage = () => {
     setLoading(true);
     try {
       console.log("Updating events...");
-      fromDate.setUTCHours(0, 0, 0, 0);
-      toDate.setUTCHours(0, 0, 0, 0);
+      startDate.setUTCHours(0, 0, 0, 0);
+      endDate.setUTCHours(0, 0, 0, 0);
       const response = await fetch(
         api_request_url + `?from=${startDate.toISOString()}&to=${endDate.toISOString()}`
       );
