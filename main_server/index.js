@@ -403,7 +403,9 @@ async function getStarList() {
     });
     // Extract names from the Elasticsearch response
     const names = response.hits.hits.map((hit) => hit._source.star);
-    return names;
+    const names_unique = new Set(names);
+    const result = Array.from(names_unique);    
+    return result;
   } catch (error) {
     console.error('Error while retrieving names from Elasticsearch:', error);
     return [];
