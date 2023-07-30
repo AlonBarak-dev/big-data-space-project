@@ -151,11 +151,11 @@ const Search = () => {
               options={starList}
               renderInput={(params) => <TextField {...params} label="Star Name" />}
               value={typeValue}
-              onChange={(value) => {
-                setTypeValue(value.target.value);
+              onChange={(event, value) => {
+                setTypeValue(value);
               }}
-              onSelect={(value) => {
-                setTypeValue(value.target.value);
+              getOptionLabel={(option) => {
+                return option != 0 ? option : "none";
               }}
             />
           </Grid>
