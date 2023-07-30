@@ -12,7 +12,7 @@ const {
   simIndexName,
   neoIndexName,
 } = require("./config");
-const { getCached, caching, getKey } = require("./cache");
+const { getCached, caching, getKey , delCache} = require("./cache");
 const { createClient } = require("redis");
 const kafka = require("kafka-node");
 const io = require("socket.io");
@@ -76,7 +76,6 @@ app.get("/get_event_list", async (req, res) => {
   const ret = { events: events };
   await caching(getKey(JSON.stringify([req.path, req.query])), ret);
   res.json(ret);
-  console.log("done");
 });
 
 app.get("/search_events", async (req, res) => {
