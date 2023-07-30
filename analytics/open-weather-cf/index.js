@@ -40,6 +40,7 @@ functions.http('ow_scraper', async (req, res) => {
             console.error(e);
         }
     }
+    res.send("ok");
 
 });
 

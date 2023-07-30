@@ -4,6 +4,7 @@ const cheerio = require("cheerio");
 const Redis = require("ioredis");
 const { Client } = require('@elastic/elasticsearch'); // elastic search
 const { MongoClient } = require('mongodb');
+const functions = require('@google-cloud/functions-framework');
 
 
 const KEY = "DdYnXnHGhGOgBhdoKoIvo5IyprK7EKfqiZtmKrjo";
@@ -51,7 +52,7 @@ const scrapNeos = () => {
 		neo_url +
 		`?start_date=${start_date_formatted}&end_date=${end_date_formatted}&api_key=${KEY}`;
 
-	axios
+	return axios
 		.get(url)
 		.then(async (response) => {
 			const result = processNEOResponse(response.data);
@@ -354,7 +355,7 @@ const getSunForcastString = async(config) => {
 
 const updateSunData = () => {
 	console.log("Updating sun data");
-	getVisualSunData ()
+	return getVisualSunData ()
 		.then(async (data) => {
 			await redis.set("sun_forcast", JSON.stringify(data));
 			console.log("Sun data updated successfuly!");
@@ -366,8 +367,8 @@ const updateSunData = () => {
 
 const updateSunDataMongo = () => {
 	const db_name = "big-data";
-	getSunDataForMongo()
-	.then((data) => {
+	return getSunDataForMongo()
+	.then(async (data) => {
 		const solar_flare_data = data.solar_flare_data;
 		const solaFlareList = []
 		for (let entry in solar_flare_data) {
@@ -375,21 +376,21 @@ const updateSunDataMongo = () => {
 			const flareEntryValue = solar_flare_data[entry]["value"];
 			solaFlareList.push({date: flareEntryDate, value: flareEntryValue});
 		}
-		insertDataToMongoMany(db_name, "solar_flares", solaFlareList);
+		await insertDataToMongoMany(db_name, "solar_flares", solaFlareList);
 
 		const currentDate = Date.now();
 		const nSunSpots = data.number_of_sun_spots;
 		const nSunSpotsEntry = {date: currentDate, value: nSunSpots};
-		insertDataToMongo(db_name, "n_sunspots", nSunSpotsEntry);
+		await insertDataToMongo(db_name, "n_sunspots", nSunSpotsEntry);
 
 		const sunspotsImageData = data.images.sunspots;
 		const solarFlaresImageData = data.images.solar_falres;
 		const sunspotsEntry = {date: currentDate, value: sunspotsImageData}
 		const solarFlareEntry = {date: currentDate, value: solarFlaresImageData}
-		
-		insertDataToMongo(db_name, "sunspot_images", sunspotsEntry);
-		insertDataToMongo(db_name, "solar_flare_images", solarFlareEntry);
-		
+
+		await insertDataToMongo(db_name, "sunspot_images", sunspotsEntry);
+		await insertDataToMongo(db_name, "solar_flare_images", solarFlareEntry);
+
 		const cmesList = [];
 		for (let entryKey in data.cmes_list) {
 			const [year, month, day, hours, minutes] = data.cmes_list[entryKey]["Onset time"].split(/[/ :]/);
@@ -397,8 +398,8 @@ const updateSunDataMongo = () => {
 			data.cmes_list[entryKey]["Onset time"] = dateObject.getTime();
 			cmesList.push(data.cmes_list[entryKey]);
 		}
-		insertDataToMongoMany(db_name, "cmes", cmesList);
-		
+		await insertDataToMongoMany(db_name, "cmes", cmesList);
+
 		const regoinsList = [];
 		for (let regionKey in data.sunspot_regions) {
 			const entry = {date: currentDate};
@@ -407,10 +408,10 @@ const updateSunDataMongo = () => {
 			}
 			regoinsList.push(entry);
 		}
-		insertDataToMongoMany(db_name, "sunspot_regions", regoinsList);
+		await insertDataToMongoMany(db_name, "sunspot_regions", regoinsList);
 
 		const forcastStringEntry = {date: currentDate, value: data.sun_forcast_string};
-		insertDataToMongo(db_name, "sun_frocast", forcastStringEntry);	
+		await insertDataToMongo(db_name, "sun_frocast", forcastStringEntry);
 
 		console.log("Mongo update done!");
 	});
@@ -456,6 +457,17 @@ async function insertDataToMongoMany(db_name, collecetionName, data){
 		console.log("Data: ", data);
 	}
 }
+
+
+// Register an HTTP function with the Functions Framework that will be executed
+// when you make an HTTP request to the deployed function's endpoint.
+functions.http('sun_scraper', async (req, res) => {
+	const ret = [await updateSunData(), await scrapNeos(), await updateSunDataMongo()];
+	console.log(ret);
+	res.send(ret);
+});
+
+
 
 // setInterval(updateSunData, 60_000);
 // setInterval(scrapNeos, 60_000 * 60);
