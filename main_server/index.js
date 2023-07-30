@@ -47,9 +47,9 @@ const consumer = new kafka.Consumer(
 // Socket.IO setup
 const server = http.createServer();
 const socketIO = io(server, {
-    cors: {
-        origin: "*"
-      }
+  cors: {
+    origin: "*",
+  },
 });
 
 // Serve static files from the React build directory
@@ -86,41 +86,51 @@ app.get("/search_events", async (req, res) => {
   // 'to' can come before 'from' and still work fine and so on.
   // it is possible to use the function with NO PARAMS at all and retrieve the entire index.
   // it is possible to use SOME of the PARAMS e.g; star & notfac.
-  
-  const from = req.query.from || null
-  const to = req.query.to || null  
-  const star = req.query.star || null
-  const type = req.query.type || null
-  const notfac = req.query.notfac || null
 
-  try{
-    console.log(from, to, star, type, notfac)
-    var filtered_events = null
-    if(from && to){
-      filtered_events = await searchEventsInRange(from, to)
-    } else{
-      filtered_events = (await getAllEntries(simIndexName)).hits.hits.map((hit) => {return hit["_source"]})
+  const from = req.query.from || null;
+  const to = req.query.to || null;
+  const star = req.query.star || null;
+  const type = req.query.type || null;
+  const notfac = req.query.notfac || null;
+
+  try {
+    console.log(from, to, star, type, notfac);
+    var filtered_events = null;
+    if (from && to) {
+      filtered_events = await searchEventsInRange(from, to);
+    } else {
+      filtered_events = (await getAllEntries(simIndexName)).hits.hits.map(
+        (hit) => {
+          return hit["_source"];
+        }
+      );
     }
 
-    if(star){
-      filtered_events = filtered_events.filter((event_in_range) => event_in_range.star == star)
+    if (star) {
+      filtered_events = filtered_events.filter(
+        (event_in_range) => event_in_range.star == star
+      );
     }
-    console.log(filtered_events)
-    if(type){
-      filtered_events = filtered_events.filter((event_in_range) => event_in_range.type == type)
+    console.log(filtered_events);
+    if (type) {
+      filtered_events = filtered_events.filter(
+        (event_in_range) => event_in_range.type == type
+      );
     }
-    console.log(filtered_events)
-    if(notfac){
-      filtered_events = filtered_events.filter((event_in_range) => event_in_range.notfac == notfac)
+    console.log(filtered_events);
+    if (notfac) {
+      filtered_events = filtered_events.filter(
+        (event_in_range) => event_in_range.notfac == notfac
+      );
     }
-    console.log(filtered_events)
-    const result = filtered_events
-    res.json({events:result})
-  } catch(error){
-    console.error('Error while searching for events:', error);
-    res.status(500).json({error: 'Internal Server Error'});
+    console.log(filtered_events);
+    const result = filtered_events;
+    res.json({ events: result });
+  } catch (error) {
+    console.error("Error while searching for events:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
-})
+});
 
 app.get("/get_event_list_date/:from/:to", async (req, res) => {
   const from = req.params.from;
@@ -400,7 +410,6 @@ async function calculateEstimatedDiametersAndDistribution() {
     // Combine the distribution with the maxEstimatedDiameter in the final JSON
     const result = {
       ...distribution,
-      max_estimated_diameter: maxEstimatedDiameter,
     };
 
     console.log(result);

@@ -13,9 +13,9 @@ const NeoList = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("/get_neos");
+        const response = await fetch("/get_neos_24_hours");
         const data = await response.json();
-        setJsonData(data.neo_list);
+        setJsonData(data.neos);
 
         setLoading(false);
       } catch (error) {
@@ -45,18 +45,39 @@ const NeoList = () => {
     return <p>No Neos Found!</p>;
   }
 
+  const neosSet = removeDuplicateObjects(jsonData);
+  console.log("Neo List Result: ", neosSet);
+
   return (
     <DataTable
       table={{
         columns: [
-          { Header: "name", accessor: "name", width: "30%" },
-          { Header: "approach date", accessor: "approach_date", width: "30%" },
+          { Header: "name", accessor: "name" },
+          { Header: "approach date", accessor: "approach_date" },
           { Header: "is hazardous", accessor: "is_potentially_hazardous" },
+          { Header: "magnitude", accessor: "magnitude" },
+          { Header: "max extimated size", accessor: "estimated_max_diameter_size_meters" },
+          { Header: "min extimated size", accessor: "estimated_min_diameter_size_meters" },
         ],
-        rows: jsonData,
+        rows: neosSet,
       }}
     />
   );
 };
+
+function removeDuplicateObjects(list) {
+  const uniqueObjects = [];
+  const uniqueNames = new Set();
+
+  for (const obj of list) {
+    const name = obj.name;
+    if (!uniqueNames.has(name)) {
+      uniqueNames.add(name);
+      uniqueObjects.push(obj);
+    }
+  }
+
+  return uniqueObjects;
+}
 
 export default NeoList;

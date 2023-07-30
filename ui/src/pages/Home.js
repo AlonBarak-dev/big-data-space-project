@@ -12,6 +12,7 @@ import EventListView from "partials/eventList";
 import SunForcastPartial from "partials/sunForcast";
 import LatestEvent from "partials/latestEvent";
 import NeoList from "partials/neolist";
+import EventsDistBarPlot from "partials/EventDistBarPlot";
 
 const Home = () => {
   const [lastEvent, setLatestEvent] = useState(null);
@@ -42,21 +43,37 @@ const Home = () => {
     <DashboardLayout>
       <DashboardNavbar />
       <Grid container spacing={3}>
-        <Grid item xs={12} md={12} lg={6}>
+        <Grid item xs={12} md={12} lg={12}>
           <h3>Latest Event</h3>
           <LatestEvent lastEvent={lastEvent} />
         </Grid>
         <Grid item xs={12} md={12} lg={6}>
-          <h3>Sun Forcast</h3>
-          <SunForcastPartial />
+          <EventsDistBarPlot
+            dataSourceUrl="/countByUrgency"
+            title="Events Distribution"
+            description="The distribution of events for the last week based on urgency"
+            color="info"
+          />
         </Grid>
-        <Grid item xs={12} md={12} lg={8}>
+        <Grid item xs={12} md={12} lg={6}>
+          <EventsDistBarPlot
+            dataSourceUrl="/get_neos_last_month_by_diameter"
+            title="Neo Disribution"
+            description="The distribution of NES's for the last month based on size"
+            color="success"
+          />
+        </Grid>
+        <Grid item xs={12} md={12} lg={12}>
           <h3>Events</h3>
           <EventListView />
         </Grid>
-        <Grid item xs={12} md={12} lg={4}>
-          <h3>Near Earth Objects</h3>
+        <Grid item xs={12} md={12} lg={12}>
+          <h3>Near Earth Objects (Next 24 Hours)</h3>
           <NeoList />
+        </Grid>
+        <Grid item xs={12} md={12} lg={12}>
+          <h3>Sun Forcast</h3>
+          <SunForcastPartial />
         </Grid>
       </Grid>
     </DashboardLayout>
