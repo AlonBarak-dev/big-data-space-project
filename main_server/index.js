@@ -188,6 +188,16 @@ app.get("/get_solar_flares/:interval", async (req, res) => {
     res.json({solar: result})
 })
 
+app.get("/get_star_list", async (req, res) => {
+  try{
+      const result = await getStarList()
+      res.json({stars: result})
+    } catch (error){
+        console.error('Error while searching Stars:', error);
+        res.status(500).json({error: 'Internal Server Error'});
+  }
+})
+
 
 async function searchDocuments(indexName, query) {
     const response = await client.search({
@@ -351,6 +361,25 @@ async function extractSolarFlaresWithinLastXHours(interval) {
         await client.close();
     }
 }
+
+async function getStarList() {
+  try {
+    const response = await client.search({
+      index: simIndexName, body: {
+          query: {
+              match_all: {},
+          }, size: 10000,
+      },
+    });
+    // Extract names from the Elasticsearch response
+    const names = response.hits.hits.map((hit) => hit._source.star);
+    return names;
+  } catch (error) {
+    console.error('Error while retrieving names from Elasticsearch:', error);
+    return [];
+  }
+}
+
 
 
 // Neos using Redis (Cache) & Elastic/MongoDB ((Disk)
