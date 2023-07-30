@@ -51,7 +51,6 @@ const MongoService = {
         ];
         console.log(JSON.stringify(pipeline));
 
-
         const aggCursor = await database.collection('open-weather').aggregate(pipeline);
 
         return await aggCursor;
