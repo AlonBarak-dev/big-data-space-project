@@ -3,16 +3,14 @@ import React from "react";
 import "react-loading-skeleton/dist/skeleton.css";
 
 import MDBox from "../components/MDBox";
-import { Card } from "@mui/material";
+import { Card, Grid } from "@mui/material";
 
 const LatestEvent = (lastEvent) => {
   lastEvent = lastEvent.lastEvent;
   if (!lastEvent) {
     return (
-      <Card>
-        <MDBox>
-          <p>No event!</p>
-        </MDBox>
+      <Card sx={{ padding: "10px" }}>
+        <MDBox>No event received in Websocket yetpki!</MDBox>
       </Card>
     );
   }
