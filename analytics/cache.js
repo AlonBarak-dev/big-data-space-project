@@ -25,7 +25,9 @@ module.exports = {
         } else{
             try{
                 next();
-            }catch {}
+            }catch (e){
+                next(e);
+            }
         }
     },
     caching: async (key, data) => {
