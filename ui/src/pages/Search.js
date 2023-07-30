@@ -231,7 +231,7 @@ function getUrlByFilters(startDate, endDate, type, notfac, star) {
 
 function getElementsBasedOnSearchType(searchType) {
   if (searchType === "type") {
-    return ["X Ray Rise", "Comet", "GRB", "UV Rise", "Apparent Brightness Rise"];
+    return ["X-Ray Rise", "Comet", "GRB", "UV Rise", "Apparent Brightness Rise"];
   } else if (searchType === "notfac") {
     return [
       "MMT",
