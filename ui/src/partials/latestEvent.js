@@ -6,6 +6,7 @@ import MDBox from "../components/MDBox";
 import { Card } from "@mui/material";
 
 const LatestEvent = (lastEvent) => {
+  lastEvent = lastEvent.lastEvent;
   if (!lastEvent) {
     return (
       <Card>
@@ -17,7 +18,7 @@ const LatestEvent = (lastEvent) => {
   }
 
   console.log(lastEvent);
-  var bgColor = lastEvent["urgancy"] >= 4 ? "red" : "info";
+  var bgColor = lastEvent["urg"] >= 4 ? "red" : "info";
 
   return (
     <MDBox mb={1.5} py={3} px={1.5} color={"white"} bgColor={bgColor} borderRadius={10}>

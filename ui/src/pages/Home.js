@@ -24,7 +24,8 @@ const Home = () => {
     });
 
     socket.on("new-message", (message) => {
-      console.log("Received new message from Kafka:", message);
+      message = JSON.parse(message);
+      console.log("Received new message: ", message);
       setLatestEvent(message);
     });
 
