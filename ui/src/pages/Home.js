@@ -66,7 +66,7 @@ const Home = () => {
         </Grid>
         <Grid item xs={12} md={12} lg={12}>
           <h3>Events</h3>
-          <EventListView />
+          <EventListView latestEvent={lastEvent} />
         </Grid>
         <Grid item xs={12} md={12} lg={12}>
           <h3>Near Earth Objects (Next 24 Hours)</h3>

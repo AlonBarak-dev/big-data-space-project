@@ -6,7 +6,8 @@ import DataTable from "examples/Tables/DataTable";
 import { Card } from "@mui/material";
 import MDBox from "components/MDBox";
 
-const EventListView = () => {
+// eslint-disable-next-line react/prop-types
+const EventListView = ({ latestEvent }) => {
   const [jsonData, setJsonData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -25,7 +26,7 @@ const EventListView = () => {
     };
 
     fetchData();
-  }, []);
+  }, [latestEvent]);
 
   if (loading) {
     return <Skeleton />;
@@ -42,6 +43,7 @@ const EventListView = () => {
   }
 
   const eventList = jsonData["events"];
+  eventList.reverse();
 
   if (eventList.length == 0) {
     return <h3>No Events!</h3>;

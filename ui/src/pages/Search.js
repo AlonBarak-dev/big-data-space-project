@@ -87,7 +87,7 @@ const Search = () => {
     );
   }
   var eventList = jsonData["events"];
-  eventList.sort((a, b) => a.date > b.date);
+  eventList.reverse();
 
   console.log("Event list: ", eventList);
   return (
