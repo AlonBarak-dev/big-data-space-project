@@ -21,6 +21,7 @@ import MDBox from "components/MDBox";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 
 const Search = () => {
+  const [starList, setStarList] = useState([]);
   const [jsonData, setJsonData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [api_request_url, setApiUrl] = useState("/get_event_list");
@@ -37,7 +38,10 @@ const Search = () => {
         console.log("Updating events...");
         const response = await fetch(api_request_url);
         const data = await response.json();
-
+        const starsResponse = await fetch("/get_star_list");
+        const starsData = await starsResponse.json();
+        setStarList(starsData.stars);
+        console.log("Stars: ", starList);
         setJsonData(data);
         setLoading(false);
       } catch (error) {
@@ -130,7 +134,7 @@ const Search = () => {
                 label="Value"
                 style={{ height: "42px", fontSize: "16px" }}
               >
-                {starList.map((element) => {
+                {getElementsBasedOnSearchType(searchBy).map((element) => {
                   return (
                     <MenuItem key={element} value={element}>
                       {element}
@@ -144,9 +148,13 @@ const Search = () => {
           <Grid item xs={12} md={2} lg={2}>
             <Autocomplete
               id="combo-box-demo"
-              options={getElementsBasedOnSearchType(searchBy)}
+              options={starList}
               renderInput={(params) => <TextField {...params} label="Star Name" />}
+              value={typeValue}
               onChange={(value) => {
+                setTypeValue(value.target.value);
+              }}
+              onSelect={(value) => {
                 setTypeValue(value.target.value);
               }}
             />
