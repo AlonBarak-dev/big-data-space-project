@@ -68,7 +68,7 @@ router.get('/', getCached, async function (req, res, next) {
             async () => {
                 return await axios.post(`https://bigml.io/andromeda/association?${AUTH}`, {
                     dataset: created_ds.data.resource,
-                    input_fields: ["temp", "sun_rad_level"]
+                    input_fields: ["temp", "sun_rad_level", "humidity"]
                 });
             },
             async (e) => {
