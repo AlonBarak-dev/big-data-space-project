@@ -8,9 +8,14 @@ const {MongoClient} = require('mongodb');
 const {ELASTIC_CONFIG, MONGO_CONN, REDIS_CONFIG, simIndexName, neoIndexName} = require("./config");
 const {getCached, caching, getKey} = require("./cache");
 const {createClient} = require("redis");
+const kafka = require('kafka-node');
+const io = require('socket.io');
+const http = require('http'); // Import the http module
+
 
 const app = express();
 const port = 3000;
+
 
 app.use(bodyParser.json());
 app.use(express.static(__dirname + "/build"));
@@ -26,6 +31,20 @@ redisClient.connect();
 // Create a new MongoDB instnace 
 const mongoClient = new MongoClient(MONGO_CONN)
 
+// create a new Kafka client
+const kafkaClient = new kafka.KafkaClient({kafkaHost: "35.234.119.103:9092"});
+const consumer = new kafka.Consumer(
+  kafkaClient,
+  [
+      { topic: 'raw_simulator_events', partition: 0 } 
+  ],
+  {
+      autoCommit: true
+  }
+);
+// Socket.IO setup
+const server = http.createServer();
+const socketIO = io(server);
 
 // Serve static files from the React build directory
 app.use(express.static(path.join(__dirname, 'build')));
@@ -404,6 +423,28 @@ app.get("/sun", async (req, res) => {
 app.get("*", (req, res) => {
     res.sendFile(path.join(__dirname, "build", "index.html"));
 });
+
+
+// Web socket & Kafka section
+socketIO.on('connection', (socket) => {
+  console.log('A client connected.');
+
+  consumer.on('message', (message) => {
+    // When a new message arrives from the Kafka topic, emit it to connected clients
+    console.log(message.value)
+    socket.emit('new-message', message.value);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('A client disconnected.');
+  });
+});
+
+const WSport = 8080;
+server.listen(WSport, () => {
+  console.log(`Socket.IO server is running on port ${port}`);
+});
+
 
 app.listen(port, () => {
     console.log(`Server is listening on port ${port}`);
