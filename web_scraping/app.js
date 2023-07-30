@@ -255,7 +255,8 @@ const getFlareData = async(config) => {
 			value: tableData[entry][1]
 		});
 	}
-	
+
+	console.log(flareEventsList.length);
 	return flareEventsList;
 };
 
@@ -449,8 +450,9 @@ async function insertDataToMongoMany(db_name, collecetionName, data){
 		await mongoClient.connect()
 		const db = mongoClient.db(db_name)
 		const collection = db.collection(collecetionName)
-		const result = await collection.insertMany(data)
+		const result = await collection.insertMany(data, {ordered:false})
 		console.log("Data inserted successfully!")
+		console.log(result)
 	} catch(err){
 		console.log("Insertion Failed!", err)
 		console.log("Data: ", data);
