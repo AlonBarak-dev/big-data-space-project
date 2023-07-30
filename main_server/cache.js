@@ -1,4 +1,4 @@
-const {REDIS_CONFIG} = require("./config");
+const {REDIS_HOST, REDIS_CONFIG} = require("./config");
 const {createClient} = require("redis");
 let client = createClient(REDIS_CONFIG);
 
@@ -7,12 +7,11 @@ client.on('error', err => console.log('Redis Client Error', err));
 client.connect();
 
 const DEFAULT_TTL_SECS = 8*60*60;
-const CACHE_TAG = 'ML';
+const CACHE_TAG = 'MAIN';
 
 const getKey =  (suffix) => {
     return `CACHE::${CACHE_TAG}::` + suffix
 }
-
 module.exports = {
     getKey: getKey,
     getCached: async (req, res, next) => {
