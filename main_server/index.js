@@ -12,7 +12,7 @@ const {
   simIndexName,
   neoIndexName,
 } = require("./config");
-const { getCached, caching, getKey , delCache} = require("./cache");
+const { getCached, caching, getKey, clearCache} = require("./cache");
 const { createClient } = require("redis");
 const kafka = require("kafka-node");
 const io = require("socket.io");
@@ -74,7 +74,7 @@ app.get("/get_event_list", async (req, res) => {
   });
 
   const ret = { events: events };
-  await caching(getKey(JSON.stringify([req.path, req.query])), ret);
+  await clearCache();
   res.json(ret);
 });
 
@@ -570,10 +570,11 @@ app.get("*", (req, res) => {
 socketIO.on("connection", (socket) => {
   console.log("A client connected.");
 
-  consumer.on("message", (message) => {
+  consumer.on("message", async (message) => {
     // When a new message arrives from the Kafka topic, emit it to connected clients
     console.log(message.value);
-    socket.emit("new-message", message.value);
+    await socket.emit("new-message", message.value);
+
   });
 
   socket.on("disconnect", () => {

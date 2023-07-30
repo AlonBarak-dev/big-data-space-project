@@ -8,9 +8,10 @@ client.connect();
 
 const DEFAULT_TTL_SECS = 8*60*60;
 const CACHE_TAG = 'MAIN';
+const CACHE_PREFIX = '`CACHE::${CACHE_TAG}::`';
 
 const getKey =  (suffix) => {
-    return `CACHE::${CACHE_TAG}::` + suffix
+    return `${CACHE_PREFIX}` + suffix
 }
 module.exports = {
     getKey: getKey,
@@ -32,5 +33,8 @@ module.exports = {
     },
     delCache: async (key) => {
         await client.del(key)
+    },
+    clearCache: async() => {
+        await client.del(CACHE_PREFIX+'*')
     }
 }
