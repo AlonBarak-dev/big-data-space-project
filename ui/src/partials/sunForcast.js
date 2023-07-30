@@ -4,7 +4,6 @@ import Skeleton from "react-loading-skeleton";
 import { Card, Grid } from "@mui/material";
 
 import MDBox from "../components/MDBox";
-import { json } from "react-router-dom";
 import ReportsLineChart from "examples/Charts/LineCharts/ReportsLineChart";
 
 const SunForcastPartial = () => {
