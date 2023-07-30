@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import Skeleton from "react-loading-skeleton";
 import PropTypes from "prop-types";
 
-const EventsDistBarPlot = ({ dataSourceUrl, title, description, color }) => {
+const EventsDistBarPlot = ({ dataSourceUrl, title, description, color, latestEvent }) => {
   const [jsonData, setJsonData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -23,7 +23,7 @@ const EventsDistBarPlot = ({ dataSourceUrl, title, description, color }) => {
     };
 
     fetchData();
-  }, []);
+  }, [latestEvent]);
 
   if (loading) {
     return <Skeleton />;
@@ -51,6 +51,7 @@ EventsDistBarPlot.propTypes = {
   title: PropTypes.string.isRequired,
   description: PropTypes.string.isRequired,
   color: PropTypes.string.isRequired,
+  latestEvent: PropTypes.object.isRequired,
 };
 
 function convertFormat(plotData) {

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import PropTypes from "prop-types";
 
 import Skeleton from "react-loading-skeleton";
 import { Card, Grid } from "@mui/material";
@@ -6,7 +7,7 @@ import { Card, Grid } from "@mui/material";
 import MDBox from "../components/MDBox";
 import ReportsLineChart from "examples/Charts/LineCharts/ReportsLineChart";
 
-const SunForcastPartial = () => {
+const SunForcastPartial = ({ latestEvent }) => {
   const [sunspotImageData, setSunspotImageData] = useState(null);
   const [sunActivity, setSunActivity] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -31,7 +32,7 @@ const SunForcastPartial = () => {
     };
 
     fetchData();
-  }, []);
+  }, [latestEvent]);
 
   if (loading) {
     return <Skeleton />;
@@ -59,6 +60,10 @@ const SunForcastPartial = () => {
       </Grid>
     </MDBox>
   );
+};
+
+SunForcastPartial.propTypes = {
+  latestEvent: PropTypes.object.isRequired,
 };
 
 function convertSunActivityFormat(sunActivity) {

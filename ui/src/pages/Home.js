@@ -54,6 +54,7 @@ const Home = () => {
             title="Events Distribution"
             description="The distribution of events for the last week based on urgency"
             color="info"
+            latestEvent={lastEvent}
           />
         </Grid>
         <Grid item xs={12} md={12} lg={6}>
@@ -62,6 +63,7 @@ const Home = () => {
             title="Neo Disribution"
             description="The distribution of NES's for the last month based on size"
             color="success"
+            latestEvent={lastEvent}
           />
         </Grid>
         <Grid item xs={12} md={12} lg={12}>
@@ -70,7 +72,7 @@ const Home = () => {
         </Grid>
         <Grid item xs={12} md={12} lg={12}>
           <h3>Near Earth Objects (Next 24 Hours)</h3>
-          <NeoList />
+          <NeoList latestEvent={lastEvent} />
         </Grid>
         <Grid item xs={12} md={12} lg={12}>
           <h3>Sun Forcast</h3>

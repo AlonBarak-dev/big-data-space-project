@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import PropTypes from "prop-types";
 
 import Skeleton from "react-loading-skeleton";
 
@@ -6,7 +7,7 @@ import DataTable from "examples/Tables/DataTable";
 import { Card } from "@mui/material";
 import MDBox from "components/MDBox";
 
-const NeoList = () => {
+const NeoList = ({ latestEvent }) => {
   const [jsonData, setJsonData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -25,7 +26,7 @@ const NeoList = () => {
     };
 
     fetchData();
-  }, []);
+  }, [latestEvent]);
 
   if (loading) {
     return <Skeleton />;
@@ -63,6 +64,10 @@ const NeoList = () => {
       }}
     />
   );
+};
+
+NeoList.propTypes = {
+  latestEvent: PropTypes.object.isRequired,
 };
 
 function removeDuplicateObjects(list) {
