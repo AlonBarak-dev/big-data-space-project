@@ -315,25 +315,24 @@ const getSunspotRegions = async(config) => {
 
 	return sunspotRegionList; 
 }; 
-
-const getImageUrls = async(config) => {
+const getImageUrls = async (config) => {
 	const sunspotsImageUrl = "https://www.spaceweatherlive.com/images/SDO/SDO_HMIIF_512.jpg";
 	const solarFlaresImageUrl = "https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0131.jpg";
-	
-	const sunspotImageResponse = await axios.get(sunspotsImageUrl, config);
-	const sunspotImageData = sunspotImageResponse.data;
-
-	const solarFlareResponse = await axios.get(solarFlaresImageUrl, config);
-	const solarFlareData = solarFlareResponse.data;
-
+  
+	const sunspotImageResponse = await axios.get(sunspotsImageUrl, { ...config, responseType: 'arraybuffer' });
+	const sunspotImageData = Buffer.from(sunspotImageResponse.data, 'binary').toString('base64');
+  
+	const solarFlareResponse = await axios.get(solarFlaresImageUrl, { ...config, responseType: 'arraybuffer' });
+	const solarFlareData = Buffer.from(solarFlareResponse.data, 'binary').toString('base64');
+  
 	const images = {
-		sunspots: sunspotImageData,
-		solar_falres: solarFlareData,
+	  sunspots: sunspotImageData,
+	  solar_flares: solarFlareData,
 	};
-
+  
 	return images;
-};
-
+  };
+  
 const getNumberOfSunSpots = async(config) => {
 	const sunspotsUrl = "https://www.spaceweatherlive.com/en/solar-activity.html";
 	const response = await axios.get(sunspotsUrl, config);
