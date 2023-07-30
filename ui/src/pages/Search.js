@@ -29,8 +29,9 @@ const Search = () => {
   const currentDate = new Date();
   const [startDate, setStartDate] = useState(currentDate);
   const [endDate, setEndDate] = useState(currentDate);
-  const [typeValue, setTypeValue] = useState(null);
-  const [searchBy, setSearchBy] = useState("none");
+  const [type, setType] = useState("");
+  const [telescope, setTelescope] = useState("");
+  const [star, setStar] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -38,8 +39,10 @@ const Search = () => {
         console.log("Updating events...");
         const response = await fetch(api_request_url);
         const data = await response.json();
+
         const starsResponse = await fetch("/get_star_list");
         const starsData = await starsResponse.json();
+
         setStarList(starsData.stars);
         console.log("Stars: ", starList);
         setJsonData(data);
@@ -56,7 +59,10 @@ const Search = () => {
   const handleSubmit = (event) => {
     event.preventDefault(); // Prevents the default form submission behavior
 
-    const url = getUrlByFilters(formatDate(startDate), formatDate(endDate), searchBy, typeValue);
+    console.log("star: ", star);
+    console.log("notfac: ", telescope);
+    console.log("type: ", type);
+    const url = getUrlByFilters(formatDate(startDate), formatDate(endDate), type, telescope, star);
     console.log("Calling URL: ", url);
     setApiUrl(url);
   };
@@ -104,65 +110,63 @@ const Search = () => {
         </Grid>
         <Grid item xs={12} md={2} lg={2}>
           <FormControl fullWidth>
-            <InputLabel id="test-select-label">Search By</InputLabel>
+            <InputLabel id="test-select-label">Type</InputLabel>
             <Select
-              value={searchBy}
-              onChange={(type) => {
-                setSearchBy(type.target.value);
+              value={type}
+              onChange={(value) => {
+                setType(value.target.value);
               }}
               fullWidth
-              label="Search By"
-              style={{ height: "42px", fontSize: "16px" }} // Adjust the height and font size as needed
+              label="Value"
+              style={{ height: "42px", fontSize: "16px" }}
             >
-              <MenuItem value={"none"}>None</MenuItem>
-              <MenuItem value={"star"}>Star</MenuItem>
-              <MenuItem value={"type"}>Type</MenuItem>
-              <MenuItem value={"notfac"}>Notifying Factor </MenuItem>
+              {getElementsBasedOnSearchType("type").map((element) => {
+                return (
+                  <MenuItem key={element} value={element}>
+                    {element}
+                  </MenuItem>
+                );
+              })}
             </Select>
           </FormControl>
         </Grid>
-        {!["none", "star"].includes(searchBy) ? (
-          <Grid item xs={12} md={2} lg={2}>
-            <FormControl fullWidth>
-              <InputLabel id="test-select-label">Value</InputLabel>
-              <Select
-                value={typeValue}
-                onChange={(value) => {
-                  setTypeValue(value.target.value);
-                }}
-                fullWidth
-                label="Value"
-                style={{ height: "42px", fontSize: "16px" }}
-              >
-                {getElementsBasedOnSearchType(searchBy).map((element) => {
-                  return (
-                    <MenuItem key={element} value={element}>
-                      {element}
-                    </MenuItem>
-                  );
-                })}
-              </Select>
-            </FormControl>
-          </Grid>
-        ) : searchBy === "star" ? (
-          <Grid item xs={12} md={2} lg={2}>
-            <Autocomplete
-              id="combo-box-demo"
-              options={starList}
-              renderInput={(params) => <TextField {...params} label="Star Name" />}
-              value={typeValue}
-              onChange={(event, value) => {
-                setTypeValue(value);
+        <Grid item xs={12} md={2} lg={2}>
+          <FormControl fullWidth>
+            <InputLabel id="test-select-label">Telescope</InputLabel>
+            <Select
+              value={telescope}
+              onChange={(value) => {
+                setTelescope(value.target.value);
               }}
-              getOptionLabel={(option) => {
-                return option != 0 ? option : "none";
-              }}
-            />
-          </Grid>
-        ) : (
-          <div></div>
-        )}
-        <Grid item xs={12} md={2} lg={4}>
+              fullWidth
+              label="Value"
+              style={{ height: "42px", fontSize: "16px" }}
+            >
+              {getElementsBasedOnSearchType("notfac").map((element) => {
+                return (
+                  <MenuItem key={element} value={element}>
+                    {element}
+                  </MenuItem>
+                );
+              })}
+            </Select>
+          </FormControl>
+        </Grid>
+        <Grid item xs={12} md={2} lg={2}>
+          <Autocomplete
+            id="combo-box-demo"
+            options={starList}
+            renderInput={(params) => <TextField {...params} label="Star Name" />}
+            value={star}
+            onChange={(event, value) => {
+              setStar(value);
+            }}
+            getOptionLabel={(option) => {
+              return option != 0 ? option : "none";
+            }}
+          />
+        </Grid>
+        <Grid item xs={12} md={2} lg={2}>
           <form onSubmit={handleSubmit}>
             <MDButton color="info" type={"submit"}>
               Search
@@ -204,18 +208,23 @@ function formatDate(date) {
   return `${year}-${month}-${day}`;
 }
 
-function getUrlByFilters(startDate, endDate, searchType, typeValue) {
-  if (searchType === "type") {
-    return `/get_event_list_date_by_type/${startDate}/${endDate}/${typeValue}`;
-  } else if (searchType === "notfac") {
-    return `/get_event_list_date_by_notfac/${startDate}/${endDate}/${typeValue}`;
-  } else if (searchType === "star") {
-    return `/get_event_list_date_by_star/${startDate}/${endDate}/${typeValue}`;
-  } else if (startDate < endDate) {
-    return `/get_event_list_date/${startDate}/${endDate}`;
-  } else {
-    return "/get_event_list";
+function getUrlByFilters(startDate, endDate, type, notfac, star) {
+  var url = "/search_events?";
+  var added = false;
+  if (startDate < endDate) {
+    url += `from=${startDate}&to=${endDate}&`;
   }
+  if (type) {
+    url += `type=${type}&`;
+  }
+  if (notfac) {
+    url += `notfac=${notfac}&`;
+  }
+  if (star) {
+    url += `star=${star}&`;
+  }
+
+  return url;
 }
 
 function getElementsBasedOnSearchType(searchType) {
