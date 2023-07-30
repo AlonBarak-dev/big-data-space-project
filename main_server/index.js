@@ -74,6 +74,49 @@ app.get("/get_event_list", async (req, res) => {
     console.log("done")
 });
 
+app.get("/search_events", async (req, res) => {
+  // example of usage:
+  // /search_events?from=2023-07-30&to=2023-08-30&type=UV Rise&notfac=Southern African&star=G7III
+  // The order of the parameters has NO meaning!!
+  // 'to' can come before 'from' and still work fine and so on.
+  // it is possible to use the function with NO PARAMS at all and retrieve the entire index.
+  // it is possible to use SOME of the PARAMS e.g; star & notfac.
+  
+  const from = req.query.from || null
+  const to = req.query.to || null  
+  const star = req.query.star || null
+  const type = req.query.type || null
+  const notfac = req.query.notfac || null
+
+  try{
+    console.log(from, to, star, type, notfac)
+    var filtered_events = null
+    if(from && to){
+      filtered_events = await searchEventsInRange(from, to)
+    } else{
+      filtered_events = (await getAllEntries(simIndexName)).hits.hits.map((hit) => {return hit["_source"]})
+    }
+
+    if(star){
+      filtered_events = filtered_events.filter((event_in_range) => event_in_range.star == star)
+    }
+    console.log(filtered_events)
+    if(type){
+      filtered_events = filtered_events.filter((event_in_range) => event_in_range.type == type)
+    }
+    console.log(filtered_events)
+    if(notfac){
+      filtered_events = filtered_events.filter((event_in_range) => event_in_range.notfac == notfac)
+    }
+    console.log(filtered_events)
+    const result = filtered_events
+    res.json({events:result})
+  } catch(error){
+    console.error('Error while searching for events:', error);
+    res.status(500).json({error: 'Internal Server Error'});
+  }
+})
+
 app.get("/get_event_list_date/:from/:to", async (req, res) => {
     const from = req.params.from
     const to = req.params.to
