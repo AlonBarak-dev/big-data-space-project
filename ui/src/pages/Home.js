@@ -13,6 +13,7 @@ import SunForcastPartial from "partials/sunForcast";
 import LatestEvent from "partials/latestEvent";
 import NeoList from "partials/neolist";
 import EventsDistBarPlot from "partials/EventDistBarPlot";
+import NeoDistBarPlot from "partials/NeosDistBarPlot";
 
 const Home = () => {
   const [lastEvent, setLatestEvent] = useState(null);
@@ -56,7 +57,7 @@ const Home = () => {
           />
         </Grid>
         <Grid item xs={12} md={12} lg={6}>
-          <EventsDistBarPlot
+          <NeoDistBarPlot
             dataSourceUrl="/get_neos_last_month_by_diameter"
             title="Neo Disribution"
             description="The distribution of NES's for the last month based on size"
