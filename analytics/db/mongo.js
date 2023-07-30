@@ -4,7 +4,7 @@ var config = require('../config');
 const client = new mongo.MongoClient(config.MONGO_CONN_STRING);
 const database = client.db(config.MONGO_DB);
 
-class ValueError implements Error {
+class ValueError extends Error {
 }
 
 const MongoService = {

@@ -21,7 +21,12 @@ module.exports = {
         if(c){
             res.json(JSON.parse(c));
         } else{
-            next();
+            try{
+                next();
+
+            }catch {
+
+            }
         }
 
     },
