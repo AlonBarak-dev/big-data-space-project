@@ -199,6 +199,16 @@ app.get("/get_star_list", async (req, res) => {
 })
 
 
+app.get("/get_sun_image", async (req, res) => {
+  try{
+      const result = await getSunInfo()
+      res.json({image: result})
+    } catch (error){
+        console.error('Error while loading images:', error);
+        res.status(500).json({error: 'Internal Server Error'});
+  }
+})
+
 async function searchDocuments(indexName, query) {
     const response = await client.search({
         index: indexName, body: {
@@ -356,10 +366,30 @@ async function extractSolarFlaresWithinLastXHours(interval) {
         return result
     } catch (error) {
         console.error('Error while extracting documents:', error);
-    } finally {
-        // Close the MongoDB connection after querying
-        await client.close();
     }
+}
+
+async function getSunInfo(){
+  const dbName = 'big-data';
+  const collectionName = 'sunspot_images';
+
+  try{
+    await mongoClient.connect();
+    const db = mongoClient.db(dbName);
+    const collection = db.collection(collectionName);
+
+    // Find the document with the latest date and return it
+    const latestDocument = await collection
+    .find()
+    .sort({ date: -1 }) // Sort in descending order based on the 'date' field
+    .limit(1) // Retrieve only the first document (latest date)
+    .toArray();
+
+    return latestDocument[0]; // Return the latest document
+  }catch(error){
+    console.error('Error while extracting documents:', error);
+    return null;
+  }
 }
 
 async function getStarList() {
