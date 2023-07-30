@@ -47,6 +47,8 @@ import Icon from "@mui/material/Icon";
 import WbSunnyIcon from "@mui/icons-material/WbSunny";
 import ScatterPlotIcon from "@mui/icons-material/ScatterPlot";
 import SearchIcon from "@mui/icons-material/Search";
+import { Troubleshoot } from "@mui/icons-material";
+import AnalyticsPage from "./pages/AnalyticsPage";
 
 const routes = [
   {
@@ -88,6 +90,14 @@ const routes = [
     icon: <SearchIcon fontSize="small"></SearchIcon>,
     route: "/search",
     component: <Search />,
+  },
+  {
+    type: "collapse",
+    name: "Analytics",
+    key: "analytics",
+    icon: <Troubleshoot fontSize="small"></Troubleshoot>,
+    route: "/analytics",
+    component: <AnalyticsPage />,
   },
 ];
 
