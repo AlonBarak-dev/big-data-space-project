@@ -19,7 +19,7 @@ const Home = () => {
   const [lastEvent, setLatestEvent] = useState(null);
 
   useEffect(() => {
-    const socket = io("http://localhost:8080");
+    const socket = io(window.location.protocol + "//" + window.location.hostname + ":" + "8080");
 
     socket.on("connect", () => {
       console.log("Connected to the first server.");

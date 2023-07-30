@@ -1,0 +1,1 @@
+docker rm -f ui; docker build . -t ui; docker run --net=host --restart=always -d --name ui ui

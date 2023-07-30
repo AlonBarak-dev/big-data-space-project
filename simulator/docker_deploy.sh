@@ -1,0 +1,1 @@
+docker rm -f simulator; docker build . -t simulator; docker run -d --name simulator --restart=always simulator

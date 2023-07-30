@@ -1,0 +1,1 @@
+docker rm -f analytics; docker build . -t analytics; docker run --restart=always -d --name analytics -p 4444:3000 analytics

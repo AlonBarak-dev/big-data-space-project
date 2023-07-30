@@ -1,0 +1,1 @@
+docker rm -f main_server; docker build . -t main_server; docker run --net=host --restart=always -d --name main_server  main_server
