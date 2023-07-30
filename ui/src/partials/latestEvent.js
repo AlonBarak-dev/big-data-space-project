@@ -10,7 +10,7 @@ const LatestEvent = (lastEvent) => {
   if (!lastEvent) {
     return (
       <Card sx={{ padding: "10px" }}>
-        <MDBox>No event received in Websocket yetpki!</MDBox>
+        <MDBox>No event received in WebSocket yet!</MDBox>
       </Card>
     );
   }
