@@ -66,7 +66,7 @@ function convertSunActivityFormat(sunActivity) {
   const labels = [];
   for (let idx in sunActivity) {
     labels.push(formatMillisecondsToHoursMinutes(sunActivity[idx]["date"]));
-    values.push(sunActivity[idx]["value"]);
+    values.push(sunActivity[idx]["value"] * 10000);
   }
 
   return {

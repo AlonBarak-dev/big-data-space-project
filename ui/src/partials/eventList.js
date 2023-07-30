@@ -57,7 +57,7 @@ const EventListView = () => {
           { Header: "type", accessor: "type", width: "20%" },
           { Header: "urgency", accessor: "urg", width: "20%" },
         ],
-        rows: eventList.reverse(),
+        rows: eventList,
       }}
     />
   );

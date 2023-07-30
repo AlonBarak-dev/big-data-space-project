@@ -87,6 +87,8 @@ const Search = () => {
     );
   }
   var eventList = jsonData["events"];
+  eventList.sort((a, b) => a.date > b.date);
+
   console.log("Event list: ", eventList);
   return (
     <DashboardLayout>
@@ -185,7 +187,7 @@ const Search = () => {
                   { Header: "type", accessor: "type", width: "10%" },
                   { Header: "urgency", accessor: "urg", width: "10%" },
                 ],
-                rows: eventList.reverse(),
+                rows: eventList,
               }}
             />
           ) : (
