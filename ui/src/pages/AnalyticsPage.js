@@ -23,12 +23,14 @@ const AnalyticsPage = () => {
 
   const [loading, setLoading] = useState(false);
 
-  const fromDate = new Date();
+  let fromDate = new Date();
   fromDate.setDate(fromDate.getDate() - 1);
-  const toDate = new Date();
 
-  const [startDate, setStartDate] = useState(fromDate);
-  const [endDate, setEndDate] = useState(toDate);
+  fromDate = dayjs(fromDate);
+  const toDate = dayjs(new Date());
+
+  let [startDate, setStartDate] = useState(fromDate);
+  let [endDate, setEndDate] = useState(toDate);
   const [loadedData, setLoadedData] = useState({
     associations: { rules: [] },
   });
@@ -37,8 +39,9 @@ const AnalyticsPage = () => {
     setLoading(true);
     try {
       console.log("Updating events...");
-      startDate.setUTCHours(0, 0, 0, 0);
-      endDate.setUTCHours(0, 0, 0, 0);
+      startDate = startDate.startOf("day");
+      endDate = endDate.startOf("day");
+      // endDate.setUTCHours(0, 0, 0, 0);
       const response = await fetch(
         api_request_url + `?from=${startDate.toISOString()}&to=${endDate.toISOString()}`
       );
